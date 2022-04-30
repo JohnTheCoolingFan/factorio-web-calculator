@@ -67,8 +67,6 @@ impl Component for Calculator {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
                 <p> { "Current targets:" } </p>
-                <p><button onclick={link.callback(|_| CalculatorMessage::AddItem(DEFAULT_ITEM.to_string(),
-                        CalcTarget::default()))}> {"+"} </button></p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| 
                     html_nested! { <InputItem
@@ -79,6 +77,8 @@ impl Component for Calculator {
                         index = {i} /> }
                 ) }
                 </InputList>
+                <p><button onclick={link.callback(|_| CalculatorMessage::AddItem(DEFAULT_ITEM.to_string(),
+                        CalcTarget::default()))}> {"+"} </button></p>
             </div>
         }
     }
