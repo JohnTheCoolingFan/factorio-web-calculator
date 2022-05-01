@@ -11,16 +11,15 @@ use serde::Deserialize;
 const DEFAULT_ITEM: &str = "electronic_circuit";
 
 struct Calculator {
-    targets: HashMap<String, CalcTarget>,
+    targets: Vec<CalcTarget>,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 enum CalculatorMessage {
-    RemoveItem(String),
-    AddItem(String, CalcTarget),
-    ChangeItem(String, String),
-    ChangeRate(String, CalcTargetRate)
+    RemoveItem(usize),
+    AddItem(CalcTarget),
+    ChangeItem(usize, String),
+    ChangeRate(usize, CalcTargetRate)
 }
 
 impl Component for Calculator {
@@ -29,34 +28,28 @@ impl Component for Calculator {
 
     fn create(_ctx: &Context<Self>) -> Self {
         let item_name = DEFAULT_ITEM.to_string();
-        Self{targets: HashMap::from([(item_name, CalcTarget{rate: CalcTargetRate::Factories(1.0)})])}
+        Self{targets: vec![CalcTarget::default()]}
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            CalculatorMessage::AddItem(name, target) => {
-                self.targets.insert(name, target);
+            CalculatorMessage::AddItem(target) => {
+                self.targets.push(target);
                 true
             },
-            CalculatorMessage::RemoveItem(name) => {
-                self.targets.retain(|k, _| k != &name);
+            CalculatorMessage::RemoveItem(idx) => {
+                self.targets.remove(idx);
                 true
             },
-            CalculatorMessage::ChangeItem(from, to) => {
-                if from != to {
-                    let target = self.targets.remove(&from);
-                    target.and_then(|t| self.targets.insert(to, t)).is_some()
-                } else {
-                    false
-                }
+            CalculatorMessage::ChangeItem(idx, name) => {
+                let item = self.targets.get_mut(idx).unwrap();
+                item.name = name;
+                true
             }
-            CalculatorMessage::ChangeRate(name, rate) => {
-                if let Some(target) = self.targets.get_mut(&name) {
-                    target.rate = rate;
-                    true
-                } else {
-                    false
-                }
+            CalculatorMessage::ChangeRate(idx, rate) => {
+                let item = self.targets.get_mut(idx).unwrap();
+                item.rate = rate;
+                true
             }
         }
     }
@@ -71,23 +64,29 @@ impl Component for Calculator {
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| 
                     html_nested! { <InputItem
-                        item={t.0.clone()}
-                        factories={t.1.rate.as_factories(1.0)}
-                        items_per_second={t.1.rate.as_ips(1.0)}
+                        item={t.name.clone()}
+                        factories={t.rate.as_factories(1.0)}
+                        items_per_second={t.rate.as_ips(1.0)}
                         onchanged={link.callback(|m| m)}
                         index = {i} /> }
                 ) }
                 </InputList>
-                <p><button onclick={link.callback(|_| CalculatorMessage::AddItem(DEFAULT_ITEM.to_string(),
-                        CalcTarget::default()))}> {"+"} </button></p>
+                <p><button onclick={link.callback(|_| CalculatorMessage::AddItem(CalcTarget::default()))}> {"+"} </button></p>
             </div>
         }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 struct CalcTarget {
+    name: String,
     rate: CalcTargetRate
+}
+
+impl Default for CalcTarget {
+    fn default() -> Self {
+        Self{name: "electronic-circuit".into(), rate: CalcTargetRate::default()}
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -185,16 +184,16 @@ impl Component for InputItem {
         let callback = &props.onchanged;
         match msg {
             InputItemMessage::ItemSelected(s) => {
-                callback.emit(CalculatorMessage::ChangeItem(props.item.clone(), s));
+                callback.emit(CalculatorMessage::ChangeItem(props.index, s));
             },
             InputItemMessage::Factories(a) => {
-                callback.emit(CalculatorMessage::ChangeRate(props.item.clone(), CalcTargetRate::Factories(a)));
+                callback.emit(CalculatorMessage::ChangeRate(props.index, CalcTargetRate::Factories(a)));
             },
             InputItemMessage::ItemsPerSecond(a) => {
-                callback.emit(CalculatorMessage::ChangeRate(props.item.clone(), CalcTargetRate::ItemsPerSecond(a)));
+                callback.emit(CalculatorMessage::ChangeRate(props.index, CalcTargetRate::ItemsPerSecond(a)));
             },
             InputItemMessage::Remove => {
-                callback.emit(CalculatorMessage::RemoveItem(props.item.clone()))
+                callback.emit(CalculatorMessage::RemoveItem(props.index))
             }
             _ => {}
         }
