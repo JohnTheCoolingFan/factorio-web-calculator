@@ -64,9 +64,10 @@ fn main() {
     let json_data: Value = from_reader(in_file).unwrap();
 
     let game_data = get_data(difficulty, &json_data);
+    println!("Done parsing data");
 
     let out_file = File::create(out_file_path).unwrap();
-    to_writer(out_file, &game_data).unwrap()
+    to_writer(out_file, &game_data).unwrap();
 }
 
 fn get_data(difficulty: &str, json_data: &Value) -> GameData {
@@ -116,7 +117,6 @@ fn get_data(difficulty: &str, json_data: &Value) -> GameData {
         recipes.insert(name.clone(), Recipe{name, category, energy_required, results, ingredients});
     }
 
-    println!("Done loading and parsing data");
     GameData{items, recipes, assembling_machines, item_groups, item_subgroups}
 }
 
