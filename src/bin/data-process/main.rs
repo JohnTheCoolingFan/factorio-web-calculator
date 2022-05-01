@@ -1,6 +1,6 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::HashMap, iter::Iterator, path::PathBuf, fs::File};
+use std::{collections::HashMap, iter::Iterator, path::{PathBuf, Path}, fs::File};
 use serde_json::{Value, from_reader, to_writer, from_value, json};
 use clap::Parser;
 
@@ -21,6 +21,28 @@ struct CliParameters {
     expensive: bool
 }
 
+struct PathResolver {
+    core_path: PathBuf,
+    base_path: PathBuf,
+    gen_path: PathBuf
+}
+
+impl PathResolver {
+    fn new(core_path: PathBuf, base_path: PathBuf, out_dir: &Path) -> Self {
+        Self{core_path, base_path, gen_path: out_dir.join("generated-icons/")}
+    }
+
+    fn resolve(&self, name: &str) -> PathBuf {
+        if name.starts_with("__core__") {
+            self.core_path.join(&name[6..])
+        } else if name.starts_with("__base__") {
+            self.base_path.join(&name[6..])
+        } else {
+            self.gen_path.join(name)
+        }
+    }
+}
+
 fn main() {
     let params = CliParameters::parse();
 
@@ -34,6 +56,8 @@ fn main() {
     let base_path = params.factorio_dir.join("data/base");
     let out_dir = params.output_dir;
     let out_file_path = out_dir.join("processed-data.json");
+
+    let path_resolver = PathResolver::new(core_path, base_path, &out_dir);
 
     println!("Parsing input data");
     let in_file = File::open(params.input_file).unwrap();
