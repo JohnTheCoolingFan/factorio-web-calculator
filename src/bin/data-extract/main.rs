@@ -1,6 +1,6 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::HashMap, iter::Iterator, path::PathBuf, fs::{self, File}};
+use std::{collections::HashMap, iter::Iterator, path::PathBuf, fs::File};
 use serde_json::{Value, from_reader, from_value, json};
 use clap::Parser;
 
@@ -38,6 +38,11 @@ fn main() {
     println!("Parsing input data");
     let in_file = File::open(params.input_file).unwrap();
     let json_data: Value = from_reader(in_file).unwrap();
+
+    let game_data = get_data(difficulty, &json_data);
+}
+
+fn get_data(difficulty: &str, json_data: &Value) -> GameData {
 
     println!("Processing items");
     let items: HashMap<String, Item> = json_data["item"]
@@ -84,7 +89,8 @@ fn main() {
         recipes.insert(name.clone(), Recipe{name, category, energy_required, results, ingredients});
     }
 
-    println!("Done loading and parsing data")
+    println!("Done loading and parsing data");
+    GameData{items, recipes, assembling_machines, item_groups, item_subgroups}
 }
 
 fn get_results(value: &Value) -> Vec<RecipeResult> {

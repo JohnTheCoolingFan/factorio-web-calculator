@@ -1,15 +1,15 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use serde_json::json;
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct GameData {
-    items: HashMap<String, Item>,
-    recipes: HashMap<String, Recipe>,
-    assembling_machines: HashMap<String, AssemblingMachine>,
-    item_groups: HashMap<String, ItemGroup>,
-    item_subgroup: HashMap<String, ItemSubGroup>
+    pub items: HashMap<String, Item>,
+    pub recipes: HashMap<String, Recipe>,
+    pub assembling_machines: HashMap<String, AssemblingMachine>,
+    pub item_groups: HashMap<String, ItemGroup>,
+    pub item_subgroups: HashMap<String, ItemSubGroup>
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
