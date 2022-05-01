@@ -95,12 +95,6 @@ enum CalcTargetRate {
     ItemsPerSecond(f64)
 }
 
-impl Default for CalcTargetRate {
-    fn default() -> Self {
-        Self::Factories(1.0)
-    }
-}
-
 impl CalcTargetRate {
     fn as_factories(&self, factory_ips: f64) -> f64 {
         match self {
@@ -117,8 +111,20 @@ impl CalcTargetRate {
     }
 }
 
+impl Default for CalcTargetRate {
+    fn default() -> Self {
+        Self::Factories(1.0)
+    }
+}
+
 #[derive(Debug)]
 struct InputList;
+
+#[derive(Debug, PartialEq, Properties)]
+struct InputListProperties {
+    #[prop_or_default]
+    children: ChildrenWithProps<InputItem>,
+}
 
 impl Component for InputList {
     type Message = ();
@@ -139,12 +145,6 @@ impl Component for InputList {
             </ul>
         }
     }
-}
-
-#[derive(Debug, PartialEq, Properties)]
-struct InputListProperties {
-    #[prop_or_default]
-    children: ChildrenWithProps<InputItem>,
 }
 
 #[derive(Debug, Clone)]
