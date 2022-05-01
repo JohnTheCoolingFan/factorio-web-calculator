@@ -1,5 +1,6 @@
-use std::collections::{HashMap, hash_map::Entry};
+mod data;
 
+use std::collections::{HashMap, hash_map::Entry};
 use wasm_bindgen::JsCast;
 use yew::events::Event;
 use web_sys::{EventTarget, HtmlInputElement};
