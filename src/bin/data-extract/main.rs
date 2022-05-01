@@ -1,7 +1,7 @@
 use factorio_web_calculator::data::*;
 
 use std::{collections::HashMap, iter::Iterator, path::PathBuf, fs::File};
-use serde_json::{Value, from_reader, from_value, json};
+use serde_json::{Value, from_reader, to_writer, from_value, json};
 use clap::Parser;
 
 #[derive(Debug, Parser)]
@@ -32,14 +32,17 @@ fn main() {
 
     let core_path = params.factorio_dir.join("data/core");
     let base_path = params.factorio_dir.join("data/base");
-    let output_file = params.output_dir.join("parsed-data.json");
     let out_dir = params.output_dir;
+    let out_file_path = out_dir.join("processed-data.json");
 
     println!("Parsing input data");
     let in_file = File::open(params.input_file).unwrap();
     let json_data: Value = from_reader(in_file).unwrap();
 
     let game_data = get_data(difficulty, &json_data);
+
+    let out_file = File::create(out_file_path).unwrap();
+    to_writer(out_file, &game_data).unwrap()
 }
 
 fn get_data(difficulty: &str, json_data: &Value) -> GameData {
