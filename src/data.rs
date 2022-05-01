@@ -73,16 +73,6 @@ pub enum Icon {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ProcessedIcon {
-    /// X coordinate on spreadsheet
-    pub x: usize,
-    /// Y coordinate on spreadsheet
-    pub y: usize,
-    /// name of item this icon belongs to
-    pub name: String
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IconData {
     pub icon: String,
     pub tint: Option<TintColor>
