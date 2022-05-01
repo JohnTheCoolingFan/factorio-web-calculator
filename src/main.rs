@@ -2,20 +2,20 @@ mod data;
 
 use std::collections::{HashMap, hash_map::Entry};
 use wasm_bindgen::JsCast;
-use yew::events::Event;
+use yew::{events::Event, html::ChildrenRenderer};
 use web_sys::{EventTarget, HtmlInputElement};
-use yew::prelude::*;
+use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use serde::Deserialize;
 
 const DEFAULT_ITEM: &str = "electronic_circuit";
 
-struct Calculator {
-    targets: Vec<CalcTarget>,
+pub struct Calculator {
+    pub targets: Vec<CalcTarget>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum CalculatorMessage {
+pub enum CalculatorMessage {
     RemoveItem(usize),
     AddItem(CalcTarget),
     ChangeItem(usize, String),
@@ -70,17 +70,17 @@ impl Component for Calculator {
                         onchanged={link.callback(|m| m)}
                         index = {i} /> }
                 ) }
+                <AddItem onclick={link.callback(|m| m)}/>
                 </InputList>
-                <p><button onclick={link.callback(|_| CalculatorMessage::AddItem(CalcTarget::default()))}> {"+"} </button></p>
             </div>
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct CalcTarget {
-    name: String,
-    rate: CalcTargetRate
+pub struct CalcTarget {
+    pub name: String,
+    pub rate: CalcTargetRate
 }
 
 impl Default for CalcTarget {
@@ -90,20 +90,20 @@ impl Default for CalcTarget {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum CalcTargetRate {
+pub enum CalcTargetRate {
     Factories(f64),
     ItemsPerSecond(f64)
 }
 
 impl CalcTargetRate {
-    fn as_factories(&self, factory_ips: f64) -> f64 {
+    pub fn as_factories(&self, factory_ips: f64) -> f64 {
         match self {
             Self::Factories(f) => *f,
             Self::ItemsPerSecond(i) => i / factory_ips
         }
     }
 
-    fn as_ips(&self, factory_ips: f64) -> f64 {
+    pub fn as_ips(&self, factory_ips: f64) -> f64 {
         match self {
             Self::Factories(f) => f * factory_ips,
             Self::ItemsPerSecond(i) => *i
@@ -123,7 +123,7 @@ struct InputList;
 #[derive(Debug, PartialEq, Properties)]
 struct InputListProperties {
     #[prop_or_default]
-    children: ChildrenWithProps<InputItem>,
+    children: ChildrenRenderer<InputListItem>,
 }
 
 impl Component for InputList {
@@ -143,6 +143,33 @@ impl Component for InputList {
             <ul>
                 { for ctx.props().children.iter() }
             </ul>
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum InputListItem {
+    Input(VChild<InputItem>),
+    Add(VChild<AddItem>)
+}
+
+impl From<VChild<InputItem>> for InputListItem {
+    fn from(v: VChild<InputItem>) -> Self {
+        Self::Input(v)
+    }
+}
+
+impl From<VChild<AddItem>> for InputListItem {
+    fn from(v: VChild<AddItem>) -> Self {
+        Self::Add(v)
+    }
+}
+
+impl From<InputListItem> for Html {
+    fn from(val: InputListItem) -> Self {
+        match val {
+            InputListItem::Input(c) => c.into(),
+            InputListItem::Add(c) => c.into()
         }
     }
 }
@@ -230,6 +257,37 @@ impl Component for InputItem {
                 {"items/s"}
                 // Input Items Per Second
                 <input type="text" onchange={on_ips_change} />
+            </li>
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AddItem;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct AddItemProperties {
+    onclick: Callback<<Calculator as Component>::Message>
+}
+
+impl Component for AddItem {
+    type Message = ();
+    type Properties = AddItemProperties;
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn update(&mut self, ctx: &Context<Self>, _msg: Self::Message) -> bool {
+        ctx.props().onclick.emit(CalculatorMessage::AddItem(CalcTarget::default()));
+        false
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
+        html! {
+            <li>
+                <button onclick={link.callback(|_| ())}> {"+"} </button>
             </li>
         }
     }
