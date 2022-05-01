@@ -44,7 +44,7 @@ fn test_item_deserialization() {
         ],
         "name": "blahblah"
     });
-    let item1: Item = serde_json::from_value(json1).unwrap();
+    let _item1: Item = serde_json::from_value(json1).unwrap();
 
     // This fails
     let json2 = json!({
@@ -62,7 +62,7 @@ fn test_item_deserialization() {
         "subgroup": "other",
         "type": "item"
     });
-    let item2: Item = serde_json::from_value(json2).unwrap();
+    let _item2: Item = serde_json::from_value(json2).unwrap();
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
