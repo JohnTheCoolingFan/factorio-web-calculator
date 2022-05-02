@@ -113,7 +113,7 @@ fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathReso
             .unwrap()
             .view(0, 0, 64, 64)
             .to_image();
-        icon_image.pixels_mut().map(|p| tint_pixel(p, &icon_data.tint)).for_each(drop); // FIXME: tinting and overlaying doesn't work
+        icon_image.pixels_mut().map(|p| tint_pixel(p, &icon_data.tint)).for_each(drop);
         overlay(&mut result, &icon_image, 0, 0)
         
     }
@@ -122,6 +122,7 @@ fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathReso
 }
 
 fn tint_pixel(pixel: &mut Rgba<u8>, tint: &TintColor) {
+    // FIXME: barrels are broken
     let channels_a = pixel.channels_mut();
     channels_a[0] = ((channels_a[0] as f32 * (tint.r * 255.0)) / 255.0) as u8;
     channels_a[1] = ((channels_a[1] as f32 * (tint.g * 255.0)) / 255.0) as u8;
