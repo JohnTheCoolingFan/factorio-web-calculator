@@ -169,6 +169,20 @@ fn main() {
     }).collect();
 
     spritesheet.write(out_dir.join("generated/spritesheet.png"));
+
+    // Mapping //
+
+    let spritesheet_mapping = icons.into_iter().fold(HashMap::new(), |mut mapping, (pos, names)| {
+        for name in names {
+            mapping.insert(name, pos);
+        }
+        mapping
+    });
+
+    {
+        let mapping_file = File::create(out_dir.join("generated/spritesheet-mapping.json")).unwrap();
+        to_writer(mapping_file, &spritesheet_mapping).unwrap();
+    }
 }
 
 fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathResolver) -> (String, RgbaImage) {
