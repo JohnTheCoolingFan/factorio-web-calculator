@@ -143,6 +143,8 @@ fn main() {
         icon_image.write_to(&mut file, ImageFormat::Png).unwrap();
     }
 
+    // Spritesheet //
+
     let mut simple_icons: HashMap<RgbaImage, HashSet<String>> = simple_icons.into_iter().map(|(path, items)| {
         println!("{}", path);
         let image = Reader::open(path_resolver.resolve(&path))
