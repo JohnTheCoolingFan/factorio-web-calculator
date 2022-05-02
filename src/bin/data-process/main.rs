@@ -77,6 +77,7 @@ impl SpriteSheet {
     }
 
     fn write(&self, path: impl AsRef<Path>) {
+        println!("Writing spritesheet to {}", path.as_ref().to_str().unwrap());
         let mut file = File::create(path).unwrap();
         self.sheet.write_to(&mut file, ImageFormat::Png).unwrap();
     }
@@ -145,8 +146,8 @@ fn main() {
 
     // Spritesheet //
 
+    println!("Generating spitesheet");
     let mut simple_icons: HashMap<RgbaImage, HashSet<String>> = simple_icons.into_iter().map(|(path, items)| {
-        println!("{}", path);
         let image = Reader::open(path_resolver.resolve(&path))
             .unwrap()
             .decode()
@@ -172,6 +173,7 @@ fn main() {
 
     // Mapping //
 
+    println!("Generating mapping");
     let spritesheet_mapping = icons.into_iter().fold(HashMap::new(), |mut mapping, (pos, names)| {
         for name in names {
             mapping.insert(name, pos);
@@ -180,7 +182,9 @@ fn main() {
     });
 
     {
-        let mapping_file = File::create(out_dir.join("generated/spritesheet-mapping.json")).unwrap();
+        let path = out_dir.join("generated/spritesheet-mapping.json");
+        println!("Writing generated mapping to {}", path.to_str().unwrap());
+        let mapping_file = File::create(path).unwrap();
         to_writer(mapping_file, &spritesheet_mapping).unwrap();
     }
 }
