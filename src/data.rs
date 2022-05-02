@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use image::Rgba;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use serde_json::json;
@@ -75,7 +76,12 @@ pub enum Icon {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct IconData {
     pub icon: String,
-    pub tint: Option<TintColor>
+    #[serde(default = "default_tint")]
+    pub tint: TintColor
+}
+
+fn default_tint() -> TintColor {
+    TintColor{r: 0.0, g: 0.0, b: 0.0, a: 1.0}
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -85,6 +91,17 @@ pub struct TintColor {
     pub b: f32,
     #[serde(default = "default_alpha")]
     pub a: f32
+}
+
+impl From<TintColor> for Rgba<u8> {
+    fn from(t: TintColor) -> Self {
+        [
+            (t.r * 256.0).round() as u8,
+            (t.g * 256.0).round() as u8,
+            (t.b * 256.0).round() as u8,
+            (t.a * 256.0).round() as u8
+        ].into()
+    }
 }
 
 fn default_alpha() -> f32 {

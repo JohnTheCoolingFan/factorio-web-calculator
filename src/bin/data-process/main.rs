@@ -1,8 +1,9 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::HashMap, iter::Iterator, path::{PathBuf, Path}, fs::File};
+use std::{collections::HashMap, iter::Iterator, path::{PathBuf, Path}, fs::File, fmt::format};
 use serde_json::{Value, from_reader, to_writer, from_value, json};
 use clap::Parser;
+use image::{RgbaImage, ImageBuffer, io::Reader, Rgba, Pixel, GenericImageView, imageops::overlay, GenericImage, ImageFormat};
 
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
@@ -34,9 +35,9 @@ impl PathResolver {
 
     fn resolve(&self, name: &str) -> PathBuf {
         if name.starts_with("__core__") {
-            self.core_path.join(&name[6..])
+            self.core_path.join(&name[9..])
         } else if name.starts_with("__base__") {
-            self.base_path.join(&name[6..])
+            self.base_path.join(&name[9..])
         } else {
             self.gen_path.join(name)
         }
@@ -66,8 +67,66 @@ fn main() {
     let game_data = get_data(difficulty, &json_data);
     println!("Done parsing data");
 
+    let mut icon_map: HashMap<String, Vec<String>> = HashMap::new();
+    let mut complex_icons: HashMap<String, Vec<IconData>> = HashMap::new();
+
+    println!("Processing icons for items");
+    game_data.items.iter().for_each(|(_, item)| {
+        match &item.icon {
+            Icon::Simple(icon) => icon_map.entry(icon.clone()).or_insert(vec![]).push(format!("item-{}", &item.name)),
+            Icon::Icons(icons) => {complex_icons.insert(format!("item-{}", &item.name), icons.clone());},
+        };
+    });
+
+    println!("Processing icons for assembling machines");
+    game_data.assembling_machines.iter().for_each(|(_, item)| {
+        match &item.icon {
+            Icon::Simple(icon) => icon_map.entry(icon.clone()).or_insert(vec![]).push(format!("assembling-machine-{}", &item.name)),
+            Icon::Icons(icons) => {complex_icons.insert(format!("assembling-machine-{}", &item.name), icons.clone());},
+        }
+    });
+
+    let complex_icons: HashMap<String, RgbaImage> = complex_icons.into_iter().map(|(k, icons)| generate_complex_icon(k, icons, &path_resolver)).collect();
+
+    for (name, icon_image) in &complex_icons {
+        let path = path_resolver.resolve(name);
+        println!("{}", path.to_str().unwrap());
+        let mut file = File::create(path).unwrap();
+        icon_image.write_to(&mut file, ImageFormat::Png).unwrap();
+    }
+
     let out_file = File::create(out_file_path).unwrap();
     to_writer(out_file, &game_data).unwrap();
+}
+
+fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathResolver) -> (String, RgbaImage) {
+    let mut result = ImageBuffer::from_pixel(64, 64, [0, 0, 0, 0].into());
+    for icon_data in icons {
+        println!("{:?}", icon_data);
+        let icon_path = resolver.resolve(&icon_data.icon);
+        println!("{}", icon_path.to_str().unwrap());
+        let mut icon_image = Reader::open(icon_path)
+            .unwrap()
+            .decode()
+            .unwrap()
+            .as_rgba8()
+            .unwrap()
+            .view(0, 0, 64, 64)
+            .to_image();
+        icon_image.pixels_mut().map(|p| tint_pixel(p, &icon_data.tint)).for_each(drop); // FIXME: tinting and overlaying doesn't work
+        overlay(&mut result, &icon_image, 0, 0)
+        
+    }
+
+    (format!("{}.png", name), result)
+}
+
+fn tint_pixel(pixel: &mut Rgba<u8>, tint: &TintColor) {
+    let channels_a = pixel.channels_mut();
+    channels_a[0] = ((channels_a[0] as f32 * (tint.r * 255.0)) / 255.0) as u8;
+    channels_a[1] = ((channels_a[1] as f32 * (tint.g * 255.0)) / 255.0) as u8;
+    channels_a[2] = ((channels_a[2] as f32 * (tint.b * 255.0)) / 255.0) as u8;
+    channels_a[3] = ((channels_a[3] as f32 * (tint.a * 255.0)) / 255.0) as u8;
 }
 
 fn get_data(difficulty: &str, json_data: &Value) -> GameData {
