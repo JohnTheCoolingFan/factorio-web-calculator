@@ -96,10 +96,10 @@ pub struct TintColor {
 impl From<TintColor> for Rgba<u8> {
     fn from(t: TintColor) -> Self {
         [
-            (t.r * 256.0).round() as u8,
-            (t.g * 256.0).round() as u8,
-            (t.b * 256.0).round() as u8,
-            (t.a * 256.0).round() as u8
+            (t.r * 255.0).round() as u8,
+            (t.g * 255.0).round() as u8,
+            (t.b * 255.0).round() as u8,
+            (t.a * 255.0).round() as u8
         ].into()
     }
 }
