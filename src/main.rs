@@ -1,5 +1,7 @@
-mod data;
+//mod data;
 
+use std::fs::File;
+use std::io::Read;
 use std::collections::{HashMap, hash_map::Entry};
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
@@ -8,7 +10,7 @@ use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use serde::Deserialize;
 
-const DEFAULT_ITEM: &str = "electronic_circuit";
+const DEFAULT_ITEM: &str = "advanced-circuit";
 
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
@@ -27,7 +29,6 @@ impl Component for Calculator {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let item_name = DEFAULT_ITEM.to_string();
         Self{targets: vec![CalcTarget::default()]}
     }
 
@@ -85,7 +86,7 @@ pub struct CalcTarget {
 
 impl Default for CalcTarget {
     fn default() -> Self {
-        Self{name: "electronic-circuit".into(), rate: CalcTargetRate::default()}
+        Self{name: DEFAULT_ITEM.into(), rate: CalcTargetRate::default()}
     }
 }
 
@@ -189,7 +190,7 @@ struct InputItemProps {
     index: usize
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum InputItemMessage {
     Remove,
     OpenItem,
@@ -250,7 +251,7 @@ impl Component for InputItem {
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                <button class="target_button"> { props.item.clone() } </button>
+                <button> <img src="assets/empty.gif" class={classes!("target-button", format!("icon-item-{}", props.item))}/> </button>
                 // Input factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} />

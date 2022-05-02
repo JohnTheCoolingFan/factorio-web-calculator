@@ -1,6 +1,6 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::{HashMap, HashSet}, iter::Iterator, path::{PathBuf, Path}, fs::File};
+use std::{collections::{HashMap, HashSet}, iter::Iterator, path::{PathBuf, Path}, fs::File, io::{BufWriter, Write}};
 use serde_json::{Value, from_reader, to_writer, from_value, json};
 use clap::Parser;
 use image::{RgbaImage, ImageBuffer, io::Reader, Rgba, Pixel, GenericImageView, imageops::overlay, ImageFormat};
@@ -146,7 +146,7 @@ fn main() {
 
     // Spritesheet //
 
-    println!("Generating spitesheet");
+    println!("Generating spritesheet");
     let mut simple_icons: HashMap<RgbaImage, HashSet<String>> = simple_icons.into_iter().map(|(path, items)| {
         let image = Reader::open(path_resolver.resolve(&path))
             .unwrap()
@@ -174,7 +174,9 @@ fn main() {
     // Mapping //
 
     println!("Generating mapping");
-    let spritesheet_mapping = icons.into_iter().fold(HashMap::new(), |mut mapping, (pos, names)| {
+    let spritesheet_mapping = icons
+        .into_iter()
+        .fold(HashMap::new(), |mut mapping, (pos, names)| {
         for name in names {
             mapping.insert(name, pos);
         }
@@ -186,6 +188,17 @@ fn main() {
         println!("Writing generated mapping to {}", path.to_str().unwrap());
         let mapping_file = File::create(path).unwrap();
         to_writer(mapping_file, &spritesheet_mapping).unwrap();
+    }
+
+    // CSS mapping //
+    
+    {
+        println!("Generating css styles");
+        let mut out_file = BufWriter::new(File::create(out_dir.join("generated/icon-style.css")).unwrap());
+        out_file.write_fmt(format_args!(".target-button {{ width: 64px; height: 64px; background-image: url(\"spritesheet.png\") }}")).unwrap();
+        for (name, pos) in &spritesheet_mapping {
+            out_file.write_fmt(format_args!(".icon-{} {{ background-position-x: -{}px; background-position-y: -{}px }}\n", name, pos.0, pos.1)).unwrap();
+        }
     }
 }
 
