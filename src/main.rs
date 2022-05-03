@@ -41,8 +41,7 @@ impl Component for Calculator {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let game_data_json = include_bytes!("../assets/generated/processed-data.json");
-        Self{
+        Self {
             targets: vec![CalcTarget::default()],
         }
     }
