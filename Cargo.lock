@@ -221,7 +221,6 @@ dependencies = [
  "image",
  "once_cell",
  "serde",
- "serde-json-wasm",
  "serde_json",
  "wasm-bindgen",
  "web-sys",
@@ -787,15 +786,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61ea8d54c77f8315140a05f4c7237403bf38b72704d031543aa1d16abbf517d1"
 dependencies = [
  "serde_derive",
-]
-
-[[package]]
-name = "serde-json-wasm"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bd1e2bc04a6b848717fd51368c98e09bb22a27082804b2e33b4c75cda4d7b07"
-dependencies = [
- "serde",
 ]
 
 [[package]]
