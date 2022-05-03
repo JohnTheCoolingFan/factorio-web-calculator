@@ -1,4 +1,4 @@
-//mod data;
+mod data;
 
 use std::collections::{HashMap, hash_map::Entry};
 use wasm_bindgen::JsCast;
@@ -7,11 +7,22 @@ use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use serde::Deserialize;
+use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "advanced-circuit";
 const DOWNSCALE: usize = 2;
 const SPRITESHEET_SIZE: usize = 960 / DOWNSCALE;
 const ICON_SIZE: usize = 64 / DOWNSCALE;
+
+static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
+    let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
+    serde_json::from_slice(json_mapping).unwrap()
+});
+
+static GAME_DATA: Lazy<data::GameData> = Lazy::new(|| {
+    let game_data_json = include_bytes!("../assets/generated/processed-data.json");
+    serde_json::from_slice(game_data_json).unwrap()
+});
 
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
@@ -25,23 +36,15 @@ pub enum CalculatorMessage {
     ChangeRate(usize, CalcTargetRate)
 }
 
-#[derive(Debug, Clone, PartialEq, Properties)]
-pub struct CalculatorProperties {
-    icon_map: HashMap<String, (usize, usize)>
-}
-
-impl CalculatorProperties {
-    fn make_item(&self, t: &CalcTarget) -> TargetItem {
-        TargetItem{name: t.name.clone(), pos: *self.icon_map.get(&format!("item-{}", t.name)).unwrap_or(&(0, 0))}
-    }
-}
-
 impl Component for Calculator {
     type Message = CalculatorMessage;
-    type Properties = CalculatorProperties;
+    type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self{targets: vec![CalcTarget::default()]}
+        let game_data_json = include_bytes!("../assets/generated/processed-data.json");
+        Self{
+            targets: vec![CalcTarget::default()],
+        }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -70,7 +73,6 @@ impl Component for Calculator {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
         let link = ctx.link();
-        let props = ctx.props();
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
@@ -78,7 +80,7 @@ impl Component for Calculator {
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| 
                     html_nested! { <InputItem
-                        item={props.make_item(t)}
+                        item={t.name.clone()}
                         factories={t.rate.as_factories(1.0)}
                         items_per_second={t.rate.as_ips(1.0)}
                         onchanged={link.callback(|m| m)}
@@ -188,18 +190,12 @@ impl From<InputListItem> for Html {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct TargetItem {
-    name: String,
-    pos: (usize, usize)
-}
-
 #[derive(Debug, Clone)]
 struct InputItem;
 
 #[derive(Debug, Clone, PartialEq, Properties)]
 struct InputItemProps {
-    item: TargetItem,
+    item: String,
     #[prop_or(1.0)]
     factories: f64,
     #[prop_or(1.0)]
@@ -286,7 +282,7 @@ pub struct InputItemIcon;
 
 #[derive(Debug, Clone, PartialEq, Properties)]
 pub struct InputItemIconProperties {
-    item: TargetItem
+    item: String
 }
 
 impl Component for InputItemIcon {
@@ -299,7 +295,7 @@ impl Component for InputItemIcon {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
-        let pos = props.item.pos;
+        let pos = ICON_MAP.get(&format!("item-{}", props.item)).unwrap_or(&(960 - 64, 960 - 64));
         html! {
             <img src="assets/empty.gif" style={format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px;", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE)}/>
         }
@@ -338,9 +334,5 @@ impl Component for AddItem {
 }
 
 fn main() {
-    let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
-
-    let icon_map: HashMap<String, (usize, usize)> = serde_json::from_slice(json_mapping).unwrap();
-
-    yew::start_app_with_props::<Calculator>(CalculatorProperties{icon_map});
+    yew::start_app::<Calculator>();
 }
