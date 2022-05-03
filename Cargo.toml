@@ -14,6 +14,8 @@ web-sys = "0.3"
 wasm-bindgen = "0.2"
 clap = { version = "3.1", features = ["derive"] }
 image = "0.24"
+tokio = {version = "1.18", features = ["rt", "macros"]}
+gloo-net = "0.2"
 
 [[bin]]
 name = "data-process"

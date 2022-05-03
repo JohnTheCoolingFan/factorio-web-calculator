@@ -1,7 +1,5 @@
 //mod data;
 
-use std::fs::File;
-use std::io::Read;
 use std::collections::{HashMap, hash_map::Entry};
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
@@ -9,8 +7,13 @@ use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use serde::Deserialize;
+use gloo_net::http::Request;
+use web_sys::console;
 
 const DEFAULT_ITEM: &str = "advanced-circuit";
+const SPRITESHEET_SIZE: usize = 960;
+const SPRITESHEET_DOWNSCALE: usize = 2;
+const ICON_SIZE: usize = 64;
 
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
@@ -24,9 +27,20 @@ pub enum CalculatorMessage {
     ChangeRate(usize, CalcTargetRate)
 }
 
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct CalculatorProperties {
+    icon_map: HashMap<String, (usize, usize)>
+}
+
+impl CalculatorProperties {
+    fn make_item(&self, t: &CalcTarget) -> TargetItem {
+        TargetItem{name: t.name.clone(), pos: *self.icon_map.get(&t.name).unwrap_or(&(0, 0))}
+    }
+}
+
 impl Component for Calculator {
     type Message = CalculatorMessage;
-    type Properties = ();
+    type Properties = CalculatorProperties;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self{targets: vec![CalcTarget::default()]}
@@ -58,6 +72,7 @@ impl Component for Calculator {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
         let link = ctx.link();
+        let props = ctx.props();
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
@@ -65,7 +80,7 @@ impl Component for Calculator {
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| 
                     html_nested! { <InputItem
-                        item={t.name.clone()}
+                        item={props.make_item(t)}
                         factories={t.rate.as_factories(1.0)}
                         items_per_second={t.rate.as_ips(1.0)}
                         onchanged={link.callback(|m| m)}
@@ -175,13 +190,18 @@ impl From<InputListItem> for Html {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TargetItem {
+    name: String,
+    pos: (usize, usize)
+}
+
 #[derive(Debug, Clone)]
 struct InputItem;
 
 #[derive(Debug, Clone, PartialEq, Properties)]
 struct InputItemProps {
-    #[prop_or("electronic-circuit".to_string())]
-    item: String,
+    item: TargetItem,
     #[prop_or(1.0)]
     factories: f64,
     #[prop_or(1.0)]
@@ -251,7 +271,7 @@ impl Component for InputItem {
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                <button> <img src="assets/empty.gif" class={classes!("target-button", format!("icon-item-{}", props.item))}/> </button>
+                <button> <InputItemIcon item={props.item.clone()}/> </button>
                 // Input factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} />
@@ -259,6 +279,31 @@ impl Component for InputItem {
                 // Input Items Per Second
                 <input type="text" onchange={on_ips_change} />
             </li>
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InputItemIcon;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct InputItemIconProperties {
+    item: TargetItem
+}
+
+impl Component for InputItemIcon {
+    type Message = ();
+    type Properties = InputItemIconProperties;
+
+    fn create(ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let props = ctx.props();
+        let pos = props.item.pos;
+        html! {
+            <img src="assets/generated/spritesheet.png" style={format!("object-fit: none; object-position: -{0}px -{1}px; width: {2}; height: {2}", pos.0, pos.1, ICON_SIZE)}/>
         }
     }
 }
@@ -294,6 +339,20 @@ impl Component for AddItem {
     }
 }
 
-fn main() {
-    yew::start_app::<Calculator>();
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
+    let request = Request::new("assets/generated/spritesheet-mapping.json").send().await;
+
+    match request {
+        Ok(response) => {
+            if response.ok() {
+                console::log_1(&"Parsing mappings".into());
+                let mappings: HashMap<String, (usize, usize)> = response.json().await.unwrap();
+                yew::start_app_with_props::<Calculator>(CalculatorProperties{icon_map: mappings});
+            } else {
+                console::log_1(&format!("Failed to get mappings: http status code {}", response.status()).into())
+            }
+        },
+        Err(why) => console::log_1(&format!("Failed to get mappings: {}", why).into())
+    };
 }
