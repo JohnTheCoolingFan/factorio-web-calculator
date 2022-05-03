@@ -260,18 +260,28 @@ impl Component for InputItem {
             input.and_then(|i| Some(InputItemMessage::ItemsPerSecond(i.value().parse().ok()?)))
         });
 
+        let on_item_selected = link.batch_callback(|e: Event| {
+            let target: Option<EventTarget> = e.target();
+
+            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+            input.and_then(|i| Some(InputItemMessage::ItemSelected(i.value().parse().ok()?)))
+        });
+
         html! {
             <li class="target">
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                <button class="target-item"> <ItemIcon item={props.item.clone()}/> </button>
+                <button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
                 // Input factories
                 {"Factories: "}
-                <input type="text" onchange={on_factories_change} />
-                {"items/s"}
+                <input type="text" onchange={on_factories_change} value={props.factories.to_string()} />
                 // Input Items Per Second
-                <input type="text" onchange={on_ips_change} />
+                {"items/s: "}
+                <input type="text" onchange={on_ips_change} value={props.items_per_second.to_string()}/>
+                // Input item manually
+                {"item: "}
+                <input type="text" onchange={on_item_selected} value={props.item.clone()}/>
             </li>
         }
     }
