@@ -1,12 +1,11 @@
 mod data;
 
-use std::collections::{HashMap, hash_map::Entry};
+use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
 use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
-use serde::Deserialize;
 use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "advanced-circuit";
