@@ -265,7 +265,7 @@ impl Component for InputItem {
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                <button> <ItemIcon item={props.item.clone()}/> </button>
+                <button class="target-item"> <ItemIcon item={props.item.clone()}/> </button>
                 // Input factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} />
@@ -329,7 +329,7 @@ impl Component for AddItem {
         let link = ctx.link();
         html! {
             <li>
-                <button onclick={link.callback(|_| ())}> {"+"} </button>
+                <button class="add-item" onclick={link.callback(|_| ())}> {"+"} </button>
             </li>
         }
     }
