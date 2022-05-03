@@ -96,7 +96,7 @@ fn main() {
     let core_path = params.factorio_dir.join("data/core");
     let base_path = params.factorio_dir.join("data/base");
     let out_dir = params.output_dir;
-    let out_file_path = out_dir.join("processed-data.json");
+    let out_file_path = out_dir.join("generated/processed-data.json");
 
     let path_resolver = PathResolver::new(core_path, base_path, &out_dir);
 

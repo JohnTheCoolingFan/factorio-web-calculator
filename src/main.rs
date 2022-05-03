@@ -7,13 +7,11 @@ use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use serde::Deserialize;
-use gloo_net::http::Request;
-use web_sys::console;
 
 const DEFAULT_ITEM: &str = "advanced-circuit";
-const SPRITESHEET_SIZE: usize = 960;
-const SPRITESHEET_DOWNSCALE: usize = 2;
-const ICON_SIZE: usize = 64;
+const DOWNSCALE: usize = 2;
+const SPRITESHEET_SIZE: usize = 960 / DOWNSCALE;
+const ICON_SIZE: usize = 64 / DOWNSCALE;
 
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
@@ -34,7 +32,7 @@ pub struct CalculatorProperties {
 
 impl CalculatorProperties {
     fn make_item(&self, t: &CalcTarget) -> TargetItem {
-        TargetItem{name: t.name.clone(), pos: *self.icon_map.get(&t.name).unwrap_or(&(0, 0))}
+        TargetItem{name: t.name.clone(), pos: *self.icon_map.get(&format!("item-{}", t.name)).unwrap_or(&(0, 0))}
     }
 }
 
@@ -303,7 +301,7 @@ impl Component for InputItemIcon {
         let props = ctx.props();
         let pos = props.item.pos;
         html! {
-            <img src="assets/generated/spritesheet.png" style={format!("object-fit: none; object-position: -{0}px -{1}px; width: {2}; height: {2}", pos.0, pos.1, ICON_SIZE)}/>
+            <img src="assets/empty.gif" style={format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px;", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE)}/>
         }
     }
 }
@@ -339,20 +337,10 @@ impl Component for AddItem {
     }
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
-    let request = Request::new("assets/generated/spritesheet-mapping.json").send().await;
+fn main() {
+    let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
 
-    match request {
-        Ok(response) => {
-            if response.ok() {
-                console::log_1(&"Parsing mappings".into());
-                let mappings: HashMap<String, (usize, usize)> = response.json().await.unwrap();
-                yew::start_app_with_props::<Calculator>(CalculatorProperties{icon_map: mappings});
-            } else {
-                console::log_1(&format!("Failed to get mappings: http status code {}", response.status()).into())
-            }
-        },
-        Err(why) => console::log_1(&format!("Failed to get mappings: {}", why).into())
-    };
+    let icon_map: HashMap<String, (usize, usize)> = serde_json::from_slice(json_mapping).unwrap();
+
+    yew::start_app_with_props::<Calculator>(CalculatorProperties{icon_map});
 }
