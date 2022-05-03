@@ -9,9 +9,11 @@ use yew_router::prelude::*;
 use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "advanced-circuit";
+const ORIGINAL_SPRITESHEET_SIZE: usize = 960;
+const ORIGINAL_ICON_SIZE: usize = 64;
 const DOWNSCALE: usize = 2;
-const SPRITESHEET_SIZE: usize = 960 / DOWNSCALE;
-const ICON_SIZE: usize = 64 / DOWNSCALE;
+const SPRITESHEET_SIZE: usize = ORIGINAL_SPRITESHEET_SIZE / DOWNSCALE;
+const ICON_SIZE: usize = ORIGINAL_ICON_SIZE / DOWNSCALE;
 
 static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
     let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
@@ -293,7 +295,9 @@ impl Component for InputItemIcon {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
-        let pos = ICON_MAP.get(&format!("item-{}", props.item)).unwrap_or(&(960 - 64, 960 - 64));
+        let pos = ICON_MAP.get(&format!("item-{}", props.item))
+            .unwrap_or(&(ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
+                    ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE));
         html! {
             <img src="assets/empty.gif" style={format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px;", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE)}/>
         }
