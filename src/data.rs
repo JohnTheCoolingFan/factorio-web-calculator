@@ -113,12 +113,33 @@ fn default_alpha() -> f32 {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Recipe {
     pub name: String,
+    #[serde(default = "default_recipe_category")]
     pub category: String,
+    #[serde(flatten)]
+    pub recipe_data: RecipeDataEnum
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RecipeDataEnum {
+    Simple(RecipeData),
+    NormalAndExpensive {
+        normal: RecipeData,
+        expensive: Option<RecipeData>
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecipeData {
+    #[serde(default = "default_energy_required")] // FIXME: does not work with normal
     pub energy_required: f32,
     pub ingredients: Vec<RecipeIngredient>,
     #[serde(flatten)]
     pub result: RecipeResults
 }
+
+fn default_recipe_category() -> String { "crafting".into() }
+const fn default_energy_required() -> f32 { 0.5 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -133,16 +154,22 @@ pub enum RecipeResults {
     }
 }
 
-const fn default_result_count() -> f32 {
-    1.0
-}
+const fn default_result_count() -> f32 { 1.0 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RecipeIngredient {
-    pub ingredient_type: RecipeItemType,
-    pub name: String,
-    pub amount: f32,
+#[serde(untagged)]
+pub enum RecipeIngredient {
+    Array(String, f32),
+    Complex {
+        #[serde(rename = "type")]
+        #[serde(default = "default_recipe_ingredient_type")]
+        ingr_type: RecipeItemType,
+        name: String,
+        amount: RecipeAmount
+    }
 }
+
+const fn default_recipe_ingredient_type() -> RecipeItemType { RecipeItemType::Item }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
