@@ -10,7 +10,7 @@ use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use once_cell::sync::Lazy;
 
-const DEFAULT_ITEM: &str = "advanced-circuit";
+const DEFAULT_ITEM: &str = "electronic-circuit";
 const UNKNOWN_ITEM: &str = "item-unknown";
 const ORIGINAL_SPRITESHEET_SIZE: usize = 960;
 const ORIGINAL_ICON_SIZE: usize = 64;
