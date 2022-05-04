@@ -191,7 +191,7 @@ fn main() {
     }
 
     // CSS mapping //
-    
+    /* Disabled because not needed
     {
         println!("Generating css styles");
         let mut out_file = BufWriter::new(File::create(out_dir.join("generated/icon-style.css")).unwrap());
@@ -200,6 +200,7 @@ fn main() {
             out_file.write_fmt(format_args!(".icon-{} {{ background-position-x: -{}px; background-position-y: -{}px }}\n", name, pos.0, pos.1)).unwrap();
         }
     }
+    */
 }
 
 fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathResolver) -> (String, RgbaImage) {
@@ -269,5 +270,8 @@ fn get_data(difficulty: &str, json_data: &Value) -> GameData {
     println!("Processing offshore pumps");
     let offshore_pumps: HashMap<String, OffshorePump> = from_value(json_data["offshore-pump"].clone()).unwrap();
 
-    GameData{items, recipes, assembling_machines, item_groups, item_subgroups, mining_drills, offshore_pumps}
+    println!("Processing resources");
+    let resources: HashMap<String, Resource> = from_value(json_data["resource"].clone()).unwrap();
+
+    GameData{items, recipes, assembling_machines, item_groups, item_subgroups, mining_drills, offshore_pumps, resources}
 }

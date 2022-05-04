@@ -12,7 +12,8 @@ pub struct GameData {
     pub item_groups: HashMap<String, ItemGroup>,
     pub item_subgroups: HashMap<String, ItemSubGroup>,
     pub mining_drills: HashMap<String, MiningDrill>,
-    pub offshore_pumps: HashMap<String, OffshorePump>
+    pub offshore_pumps: HashMap<String, OffshorePump>,
+    pub resources: HashMap<String, Resource>
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
