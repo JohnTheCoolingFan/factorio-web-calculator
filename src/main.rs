@@ -116,6 +116,10 @@ pub struct Calculation {
 }
 
 impl Calculation {
+    pub fn solve(mut self, input: Vec<CalcTarget>) -> Result<Self, CalculationError> {
+        todo!()
+    }
+
     pub fn apply_step(&mut self, step: CalcStep) {
         let produced = step.produced_per_sec();
         let consumed = step.consumed_per_sec();
@@ -129,6 +133,43 @@ impl Calculation {
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val -= amount;
         }
+    }
+
+    fn find_recipe_for_item(item: &str) -> Option<&'static Recipe> {
+        for recipe in GAME_DATA.recipes.values() {
+            if recipe.produces().iter().any(|(x, _)| x == item) {
+                return Some(recipe)
+            }
+        }
+        None
+    }
+
+    fn find_assembling_machine_for_recipe(recipe_category: &str) -> Option<&'static AssemblingMachine> {
+        for assembling_machine in GAME_DATA.assembling_machines.values() {
+            if assembling_machine.crafting_categories.iter().any(|c| c == recipe_category) {
+                return Some(assembling_machine)
+            }
+        }
+        None
+    }
+
+    fn find_resource_for_item(item: &str) -> Option<&'static Resource> {
+        for resource in GAME_DATA.resources.values() {
+            let results: Vec<(String, f32)> = (&resource.results).into();
+            if results.iter().any(|(x, _)| x == item) {
+                return Some(resource)
+            }
+        }
+        None
+    }
+
+    fn find_mining_drill_for_resource(resource_category: &str) -> Option<&'static MiningDrill> {
+        for mining_drill in GAME_DATA.mining_drills.values() {
+            if mining_drill.resource_categories.iter().any(|c| c == resource_category) {
+                return Some(mining_drill)
+            }
+        }
+        None
     }
 }
 
