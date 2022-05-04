@@ -1,5 +1,7 @@
 mod data;
 
+use data::*;
+use thiserror::Error;
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
@@ -21,13 +23,15 @@ static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
     serde_json::from_slice(json_mapping).unwrap()
 });
 
-static GAME_DATA: Lazy<data::GameData> = Lazy::new(|| {
+static GAME_DATA: Lazy<GameData> = Lazy::new(|| {
     let game_data_json = include_bytes!("../assets/generated/processed-data.json");
     serde_json::from_slice(game_data_json).unwrap()
 });
 
+#[derive(Debug)]
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
+    pub calculation: Result<Calculation, CalculationError>
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -45,6 +49,7 @@ impl Component for Calculator {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             targets: vec![CalcTarget::default()],
+            calculation: Ok(Calculation::default())
         }
     }
 
@@ -92,6 +97,44 @@ impl Component for Calculator {
             </div>
         }
     }
+}
+
+#[derive(Debug, Error)]
+pub enum CalculationError {
+    #[error("Recipe or Resource for item {0} npt found")]
+    RecipeOrResourceNotFound(String),
+    #[error("Assembling machine for recipe {0} not found")]
+    AssemblingMachineNotFound(String),
+    #[error("Minming Drill for resource {0} not found")]
+    MiningDrillNotFound(String)
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Calculation {
+    vector: HashMap<String, f32>,
+    pub steps: Vec<CalcStep>
+}
+
+#[derive(Debug, Clone)]
+pub struct CalcStep {
+    factory: Factory,
+    amount: f32
+}
+
+impl CalcStep {
+    fn produced_per_sec(&self) -> Vec<(String, f32)> {
+        todo!()
+    }
+
+    fn consumed_per_sec(&self) -> Vec<(String, f32)> {
+        todo!()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Factory {
+    AssemblingMachine(AssemblingMachine, Recipe),
+    MiningDrill(MiningDrill, Resource)
 }
 
 #[derive(Debug, Clone, PartialEq)]
