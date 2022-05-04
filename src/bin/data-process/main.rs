@@ -261,7 +261,14 @@ fn get_data(difficulty: &str, json_data: &Value) -> GameData {
     let item_subgroups: HashMap<String, ItemSubGroup> = from_value(json_data["item-subgroup"].clone()).unwrap();
 
     println!("Processing recipes");
-    let recipes: HashMap<String, Recipe> = from_value(json_data["recipe"].clone()).unwrap();
+    let recipes: HashMap<String, Recipe> = {
+        let mut result = HashMap::new();
+        for (key, value) in from_value::<HashMap<String, Value>>(json_data["recipe"].clone()).unwrap().iter() {
+            println!("\n\n\n\n{}", serde_json::to_string_pretty(value).unwrap());
+            result.insert(key.clone(), from_value::<Recipe>(value.clone()).unwrap());
+        }
+        result
+    };
 
     println!("Processing mining drills");
     let mining_drills: HashMap<String, MiningDrill> = from_value(json_data["mining-drill"].clone()).unwrap();

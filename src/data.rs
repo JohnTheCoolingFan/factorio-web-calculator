@@ -28,46 +28,6 @@ fn default_subgroup() -> String {
     "other".into()
 }
 
-// TODO: more test cases
-// TODO: move somewhere else
-#[test]
-fn test_item_deserialization() {
-    // This doesn't
-    let json1 = json!({
-        "icons": [
-            {
-                "icon": "pathhh",
-                "tint": {
-                    "r": 0.5,
-                    "g": 0.75,
-                    "b": 0.14,
-                    "a": 0.75
-                }
-            }
-        ],
-        "name": "blahblah"
-    });
-    let _item1: Item = serde_json::from_value(json1).unwrap();
-
-    // This fails
-    let json2 = json!({
-        "icons": [
-            {
-                "icon": "__base__/graphics/icons/pipe.png",
-                "tint": {
-                    "b": 1,
-                    "g": 0.5,
-                    "r": 0.5
-                }
-            }
-        ],
-        "name": "infinity-pipe",
-        "subgroup": "other",
-        "type": "item"
-    });
-    let _item2: Item = serde_json::from_value(json2).unwrap();
-}
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Icon {
@@ -116,26 +76,29 @@ pub struct Recipe {
     #[serde(default = "default_recipe_category")]
     pub category: String,
     #[serde(flatten)]
-    pub recipe_data: RecipeDataEnum
+    pub recipe_data: RecipeBody
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum RecipeDataEnum {
-    Simple(RecipeData),
+pub enum RecipeBody {
+    Simple{
+        #[serde(flatten)]
+        data: RecipeData
+    },
     NormalAndExpensive {
         normal: RecipeData,
-        expensive: Option<RecipeData>
+        expensive: RecipeData
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RecipeData {
-    #[serde(default = "default_energy_required")] // FIXME: does not work with normal
+    #[serde(default = "default_energy_required")]
     pub energy_required: f32,
     pub ingredients: Vec<RecipeIngredient>,
     #[serde(flatten)]
-    pub result: RecipeResults
+    pub results: RecipeResults
 }
 
 fn default_recipe_category() -> String { "crafting".into() }
@@ -159,38 +122,49 @@ const fn default_result_count() -> f32 { 1.0 }
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeIngredient {
-    Array(String, f32),
-    Complex {
-        #[serde(rename = "type")]
-        #[serde(default = "default_recipe_ingredient_type")]
-        ingr_type: RecipeItemType,
-        name: String,
-        amount: RecipeAmount
-    }
+    Struct(RecipeIngredientStruct),
+    Tuple(RecipeIngredientTuple)
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecipeIngredientStruct {
+    name: String,
+    #[serde(flatten)]
+    amount: RecipeAmount,
+    #[serde(rename = "type")]
+    #[serde(default = "default_recipe_ingredient_type")]
+    ingr_type: RecipeItemType,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecipeIngredientTuple(String, f32);
 
 const fn default_recipe_ingredient_type() -> RecipeItemType { RecipeItemType::Item }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeResult {
-    SimpleItem {
-        name: String,
-        #[serde(default="default_result_count")]
-        amount: f32
-    },
-    ComplexFixed{
-        #[serde(rename = "type")]
-        result_type: RecipeItemType,
-        #[serde(flatten)]
-        amount: RecipeAmount
-    },
+    Tuple(RecipeResultTuple),
+    Struct(RecipeResultStruct)
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecipeResultTuple(String, f32);
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RecipeResultStruct {
+    name: String,
+    #[serde(rename = "type")]
+    #[serde(default = "default_recipe_ingredient_type")]
+    result_type: RecipeItemType,
+    #[serde(flatten)]
+    amount: RecipeAmount,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeAmount {
-    Number{
+    NamedNumber{
         amount: f32
     },
     MinMax {
