@@ -115,6 +115,23 @@ pub struct Calculation {
     pub steps: Vec<CalcStep>
 }
 
+impl Calculation {
+    pub fn apply_step(&mut self, step: CalcStep) {
+        let produced = step.produced_per_sec();
+        let consumed = step.consumed_per_sec();
+
+        for (name, amount) in &produced {
+            let val = self.vector.entry(name.clone()).or_insert(0.0);
+            *val += amount;
+        }
+
+        for (name, amount) in &consumed {
+            let val = self.vector.entry(name.clone()).or_insert(0.0);
+            *val -= amount;
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct CalcStep {
     factory: Factory<'static>,
