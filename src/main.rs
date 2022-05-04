@@ -5,7 +5,7 @@ use thiserror::Error;
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
-use web_sys::{EventTarget, HtmlInputElement};
+use web_sys::{EventTarget, HtmlInputElement, console::log_2};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use once_cell::sync::Lazy;
@@ -59,23 +59,21 @@ impl Component for Calculator {
         match msg {
             CalculatorMessage::AddItem(target) => {
                 self.targets.push(target);
-                true
             },
             CalculatorMessage::RemoveItem(idx) => {
                 self.targets.remove(idx);
-                true
             },
             CalculatorMessage::ChangeItem(idx, name) => {
                 let item = self.targets.get_mut(idx).unwrap();
                 item.name = name;
-                true
             }
             CalculatorMessage::ChangeRate(idx, rate) => {
                 let item = self.targets.get_mut(idx).unwrap();
                 item.rate = rate;
-                true
             }
         }
+        self.calculation = Calculation::default().solve(&self.targets);
+        true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -185,7 +183,8 @@ impl Calculation {
 
     fn pick_item(&self) -> Option<(String, f32)> {
         for (name, value) in &self.vector {
-            if *value < 0.0 {
+            log_2(&name.into(), &(*value).into());
+            if value < &0.0 {
                 return Some((name.clone(), -value))
             }
         }
