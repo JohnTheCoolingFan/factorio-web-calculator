@@ -80,6 +80,23 @@ pub struct Recipe {
     pub recipe_data: RecipeBody
 }
 
+impl Recipe {
+    fn get_recipe_data(&self) -> &RecipeData {
+        match &self.recipe_data {
+            RecipeBody::Simple { data } => data,
+            RecipeBody::NormalAndExpensive { normal, expensive: _ } => normal
+        }
+    }
+
+    fn produces(&self) -> Vec<(String, f32)> {
+        (&self.get_recipe_data().results).into()
+    }
+
+    fn consumes(&self) -> Vec<(String, f32)> {
+        self.get_recipe_data().ingredients.iter().map(Into::into).collect()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeBody {
@@ -118,6 +135,15 @@ pub enum RecipeResults {
     }
 }
 
+impl From<&RecipeResults> for Vec<(String, f32)> {
+    fn from(results: &RecipeResults) -> Self {
+        match results {
+            RecipeResults::Single { result, result_count } => vec![(result.clone(), *result_count)],
+            RecipeResults::Multiple { results } => results.iter().map(|rr| rr.into()).collect()
+        }
+    }
+}
+
 const fn default_result_count() -> f32 { 1.0 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -125,6 +151,15 @@ const fn default_result_count() -> f32 { 1.0 }
 pub enum RecipeIngredient {
     Struct(RecipeIngredientStruct),
     Tuple(RecipeIngredientTuple)
+}
+
+impl From<&RecipeIngredient> for (String, f32) {
+    fn from(ri: &RecipeIngredient) -> Self {
+        match &ri {
+            RecipeIngredient::Struct(sri) => (sri.name.clone(), (&sri.amount).into()),
+            RecipeIngredient::Tuple(tri) => (tri.0.clone(), tri.1)
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -147,6 +182,15 @@ const fn default_recipe_ingredient_type() -> RecipeItemType { RecipeItemType::It
 pub enum RecipeResult {
     Tuple(RecipeResultTuple),
     Struct(RecipeResultStruct)
+}
+
+impl From<&RecipeResult> for (String, f32) {
+    fn from(rr: &RecipeResult) -> Self {
+        match rr {
+            RecipeResult::Tuple(trr) => (trr.0.clone(), trr.1),
+            RecipeResult::Struct(srr) => (srr.name.clone(), (&srr.amount).into())
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -180,6 +224,17 @@ pub enum RecipeAmount {
         amount_min: f32,
         amount_max: f32,
         probability: f32
+    }
+}
+
+impl From<&RecipeAmount> for f32 {
+    fn from(ra: &RecipeAmount) -> f32 {
+        match &ra {
+            RecipeAmount::NamedNumber{amount} => *amount,
+            RecipeAmount::MinMax{amount_min, amount_max} => (amount_min + amount_max) / 2.0,
+            RecipeAmount::Probability{amount, probability} => amount * probability,
+            RecipeAmount::MinMaxProbability{amount_min, amount_max, probability} => (amount_min + amount_max) / 2.0 * probability
+        }
     }
 }
 
