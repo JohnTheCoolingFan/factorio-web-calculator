@@ -10,7 +10,9 @@ pub struct GameData {
     pub recipes: HashMap<String, Recipe>,
     pub assembling_machines: HashMap<String, AssemblingMachine>,
     pub item_groups: HashMap<String, ItemGroup>,
-    pub item_subgroups: HashMap<String, ItemSubGroup>
+    pub item_subgroups: HashMap<String, ItemSubGroup>,
+    pub mining_drills: HashMap<String, MiningDrill>,
+    pub offshore_pumps: HashMap<String, OffshorePump>
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -114,7 +116,25 @@ pub struct Recipe {
     pub category: String,
     pub energy_required: f32,
     pub ingredients: Vec<RecipeIngredient>,
-    pub results: Vec<RecipeResult>
+    #[serde(flatten)]
+    pub result: RecipeResults
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RecipeResults {
+    Single {
+        result: String,
+        #[serde(default = "default_result_count")]
+        result_count: f32
+    },
+    Multiple{
+        results: Vec<RecipeResult>
+    }
+}
+
+const fn default_result_count() -> f32 {
+    1.0
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -125,10 +145,40 @@ pub struct RecipeIngredient {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RecipeResult {
-    pub name: String,
-    pub amount: f32,
-    pub result_type: RecipeItemType,
+#[serde(untagged)]
+pub enum RecipeResult {
+    SimpleItem {
+        name: String,
+        #[serde(default="default_result_count")]
+        amount: f32
+    },
+    ComplexFixed{
+        #[serde(rename = "type")]
+        result_type: RecipeItemType,
+        #[serde(flatten)]
+        amount: RecipeAmount
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RecipeAmount {
+    Number{
+        amount: f32
+    },
+    MinMax {
+        amount_min: f32,
+        amount_max: f32,
+    },
+    Probability {
+        amount: f32,
+        probability: f32,
+    },
+    MinMaxProbability {
+        amount_min: f32,
+        amount_max: f32,
+        probability: f32
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -148,6 +198,46 @@ pub struct AssemblingMachine {
     #[serde(default = "Vec::new")]
     pub allowed_effects: Vec<EffectType>,
     pub module_specification: Option<ModuleSpec>
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MiningDrill {
+    #[serde(alias = "icons")]
+    pub icon: Icon,
+    pub name: String,
+    pub mining_speed: f32,
+    pub resource_categories: Vec<String>,
+    #[serde(default = "Vec::new")]
+    pub allowed_effects: Vec<EffectType>,
+    pub module_specification: Option<ModuleSpec>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Resource {
+    #[serde(alias = "icons")]
+    pub icon: Icon,
+    pub name: String,
+    pub category: String,
+    pub mining_time: f32,
+    #[serde(flatten)]
+    pub fluid_requirement: Option<FluidRequirement>,
+    #[serde(flatten)]
+    pub results: RecipeResults
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FluidRequirement {
+    required_fluid: String,
+    fluid_amount: f32
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct OffshorePump {
+    #[serde(alias = "icons")]
+    icon: Icon,
+    name: String,
+    fluid: String,
+    pumping_speed: f32
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
