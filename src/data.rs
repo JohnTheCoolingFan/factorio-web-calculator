@@ -208,8 +208,7 @@ pub struct MiningDrill {
     pub name: String,
     pub mining_speed: f32,
     pub resource_categories: Vec<String>,
-    #[serde(default = "Vec::new")]
-    pub allowed_effects: Vec<EffectType>,
+    //pub allowed_effects: Option<EffectType>, // Exported data is broken a bit
     pub module_specification: Option<ModuleSpec>,
 }
 
