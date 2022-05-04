@@ -106,7 +106,11 @@ pub enum CalculationError {
     #[error("Assembling machine for recipe {0} not found")]
     AssemblingMachineNotFound(String),
     #[error("Minming Drill for resource {0} not found")]
-    MiningDrillNotFound(String)
+    MiningDrillNotFound(String),
+    #[error("Recursion limit")]
+    RecursionLimit,
+    #[error("No item to pick")]
+    NoItemToPick
 }
 
 #[derive(Debug, Clone, Default)]
@@ -116,8 +120,45 @@ pub struct Calculation {
 }
 
 impl Calculation {
-    pub fn solve(mut self, input: Vec<CalcTarget>) -> Result<Self, CalculationError> {
-        todo!()
+    pub fn solve(mut self, input: &[CalcTarget]) -> Result<Self, CalculationError> {
+        let mut recursion_limit = 500;
+        for target in input {
+            let name = target.name.clone();
+            let items_per_second = target.rate.as_ips(1.0);
+            self.vector.insert(name, -items_per_second);
+        }
+
+        while !self.is_solved() || recursion_limit > 0 {
+            recursion_limit -= 1;
+            let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
+            if let Some(recipe) = Self::find_recipe_for_item(&item.0) {
+                if let Some(assembling_machine) = Self::find_assembling_machine_for_recipe(&recipe.category) {
+                    let amount = item.1 * recipe.energy_required() / assembling_machine.crafting_speed;
+                    let step = CalcStep {
+                        factory: Factory::AssemblingMachine(assembling_machine, recipe),
+                        amount
+                    };
+                    self.apply_step(step)
+                } else {
+                    return Err(CalculationError::AssemblingMachineNotFound(recipe.name.clone()))
+                }
+            } else if let Some(resource) = Self::find_resource_for_item(&item.0) {
+                if let Some(mining_drill) = Self::find_mining_drill_for_resource(&resource.category) {
+                    let amount = item.1 * resource.mining_time / mining_drill.mining_speed;
+                    let step = CalcStep {
+                        factory: Factory::MiningDrill(mining_drill, resource),
+                        amount
+                    };
+                    self.apply_step(step)
+                } else {
+                    return Err(CalculationError::MiningDrillNotFound(resource.name.clone()))
+                }
+            } else {
+                return Err(CalculationError::RecipeOrResourceNotFound(item.0))
+            }
+        }
+
+        Ok(self)
     }
 
     pub fn apply_step(&mut self, step: CalcStep) {
@@ -133,6 +174,19 @@ impl Calculation {
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val -= amount;
         }
+    }
+
+    fn is_solved(&self) -> bool {
+        self.vector.values().sum::<f32>() == 0.0
+    }
+
+    fn pick_item(&self) -> Option<(String, f32)> {
+        for (name, value) in &self.vector {
+            if *value < 0.0 {
+                return Some((name.clone(), -value))
+            }
+        }
+        None
     }
 
     fn find_recipe_for_item(item: &str) -> Option<&'static Recipe> {
@@ -238,19 +292,19 @@ impl Default for CalcTarget {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CalcTargetRate {
-    Factories(f64),
-    ItemsPerSecond(f64)
+    Factories(f32),
+    ItemsPerSecond(f32)
 }
 
 impl CalcTargetRate {
-    pub fn as_factories(&self, factory_ips: f64) -> f64 {
+    pub fn as_factories(&self, factory_ips: f32) -> f32 {
         match self {
             Self::Factories(f) => *f,
             Self::ItemsPerSecond(i) => i / factory_ips
         }
     }
 
-    pub fn as_ips(&self, factory_ips: f64) -> f64 {
+    pub fn as_ips(&self, factory_ips: f32) -> f32 {
         match self {
             Self::Factories(f) => f * factory_ips,
             Self::ItemsPerSecond(i) => *i
@@ -328,9 +382,9 @@ struct InputItem;
 struct InputItemProps {
     item: String,
     #[prop_or(1.0)]
-    factories: f64,
+    factories: f32,
     #[prop_or(1.0)]
-    items_per_second: f64,
+    items_per_second: f32,
     onchanged: Callback<<Calculator as Component>::Message>,
     index: usize
 }
@@ -340,8 +394,8 @@ enum InputItemMessage {
     Remove,
     OpenItem,
     ItemSelected(String),
-    Factories(f64),
-    ItemsPerSecond(f64)
+    Factories(f32),
+    ItemsPerSecond(f32)
 }
 
 impl Component for InputItem {
