@@ -117,24 +117,53 @@ pub struct Calculation {
 
 #[derive(Debug, Clone)]
 pub struct CalcStep {
-    factory: Factory,
+    factory: Factory<'static>,
     amount: f32
 }
 
 impl CalcStep {
     fn produced_per_sec(&self) -> Vec<(String, f32)> {
-        todo!()
+        self.factory.produced_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
     }
 
     fn consumed_per_sec(&self) -> Vec<(String, f32)> {
-        todo!()
+        self.factory.consumed_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
     }
 }
 
 #[derive(Debug, Clone)]
-pub enum Factory {
-    AssemblingMachine(AssemblingMachine, Recipe),
-    MiningDrill(MiningDrill, Resource)
+pub enum Factory<'a> {
+    AssemblingMachine(&'a AssemblingMachine, &'a Recipe),
+    MiningDrill(&'a MiningDrill, &'a Resource)
+}
+
+impl<'a> Factory<'a> {
+    fn produced_per_sec(&self) -> Vec<(String, f32)> {
+        match self {
+            Factory::AssemblingMachine(am, re) => re
+                .produces()
+                .into_iter()
+                .map(|(name, amount)| (name, (am.crafting_speed / re.energy_required()) * amount))
+                .collect(),
+            Factory::MiningDrill(md, re) => {
+                let temp: Vec<(String, f32)> = (&re.results).into();
+                temp.into_iter().map(|(name, amount)| (name, (md.mining_speed / re.mining_time) * amount)).collect()
+            }
+        }
+    }
+
+    fn consumed_per_sec(&self) -> Vec<(String, f32)> {
+        match self {
+            Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, r.energy_required() / a.crafting_speed * amount)).collect(),
+            Factory::MiningDrill(md, re) => {
+                if let Some(fluid_requirement) = &re.fluid_requirement {
+                    vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (re.mining_time / md.mining_speed))]
+                } else {
+                    vec![]
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

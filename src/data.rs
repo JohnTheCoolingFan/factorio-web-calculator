@@ -88,12 +88,16 @@ impl Recipe {
         }
     }
 
-    fn produces(&self) -> Vec<(String, f32)> {
+    pub fn produces(&self) -> Vec<(String, f32)> {
         (&self.get_recipe_data().results).into()
     }
 
-    fn consumes(&self) -> Vec<(String, f32)> {
+    pub fn consumes(&self) -> Vec<(String, f32)> {
         self.get_recipe_data().ingredients.iter().map(Into::into).collect()
+    }
+
+    pub fn energy_required(&self) -> f32 {
+        self.get_recipe_data().energy_required
     }
 }
 
@@ -283,17 +287,17 @@ pub struct Resource {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FluidRequirement {
-    required_fluid: String,
-    fluid_amount: f32
+    pub required_fluid: String,
+    pub fluid_amount: f32
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OffshorePump {
     #[serde(alias = "icons")]
-    icon: Icon,
-    name: String,
-    fluid: String,
-    pumping_speed: f32
+    pub icon: Icon,
+    pub name: String,
+    pub fluid: String,
+    pub pumping_speed: f32
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
