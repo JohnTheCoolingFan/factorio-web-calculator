@@ -47,9 +47,11 @@ impl Component for Calculator {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
+        let targets = vec![CalcTarget::default()];
+        let calculation = Calculation::default().solve(&targets);
         Self {
-            targets: vec![CalcTarget::default()],
-            calculation: Ok(Calculation::default())
+            targets,
+            calculation
         }
     }
 
@@ -94,6 +96,7 @@ impl Component for Calculator {
                 ) }
                 <AddItem onclick={link.callback(|m| m)}/>
                 </InputList>
+                { if let Err(why) = &self.calculation { format!("An error occured: {}", why) } else { "no errors".into() } }
             </div>
         }
     }
