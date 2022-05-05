@@ -693,13 +693,23 @@ impl Component for FactoryStep {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
+        let famount = props.step.amount;
         html!{
-            <li><p> { format!("{:.3}x \"{}\" producing {}" ,
-                props.step.amount,
-                props.step.machine_name(),
-                props.step.produced_per_sec().iter()
-                .map(|(name, amount)| format!("\"{}\" x{:.3}", name, amount)).collect::<Vec<String>>()
-                .join(", ")) } </p></li>
+            <li><p>
+                {format!("{:.3}x ", famount)}
+                <SpriteSheetIcon prefix={props.step.factory.icon_prefix().to_string()} name={props.step.factory.name()} />
+                {" producing "}
+                {
+                    for props.step.produced_per_sec().iter().map(|(name, amount)| {
+                        html_nested! {
+                            <>
+                            <SpriteSheetIcon prefix={"item".to_string()} name={name.clone()}/>
+                            {format!("x{:.3}; ", amount)}
+                            </>
+                        }
+                    })
+                }
+            </p></li>
         }
     }
 }
