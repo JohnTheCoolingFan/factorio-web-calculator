@@ -91,14 +91,25 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
-                { for targets.iter().enumerate().map(|(i, t)| 
+                { for targets.iter().enumerate().map(|(i, t)| { 
+                    let ips = if let Ok(factory) = Factory::for_item(&t.name) {
+                        let mut result = 1.0;
+                        for (name, amount) in factory.produced_per_sec() {
+                            if name == t.name {
+                                result = amount
+                            }
+                        }
+                        result
+                    } else {
+                        1.0
+                    };
                     html_nested! { <InputItem
                         item={t.name.clone()}
-                        factories={t.rate.as_factories(1.0)}
-                        items_per_second={t.rate.as_ips(1.0)}
+                        factories={t.rate.as_factories(ips)}
+                        items_per_second={t.rate.as_ips(ips)}
                         onchanged={link.callback(|m| m)}
                         index = {i} /> }
-                ) }
+                }) }
                 <AddItem onclick={link.callback(|m| m)}/>
                 </InputList>
                 <p>{ if let Err(why) = &self.calculation { format!("An error occured: {}", why) } else { "no errors".into() } }</p>
