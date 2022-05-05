@@ -7,7 +7,6 @@ use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
 use web_sys::{EventTarget, HtmlInputElement, console::{log_2, log_1}};
 use yew::{virtual_dom::VChild, prelude::*};
-use yew_router::prelude::*;
 use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "electronic-circuit";
@@ -78,7 +77,13 @@ impl Component for Calculator {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
+        let steps = if let Ok(calculation) = &self.calculation {
+            calculation.steps.clone()
+        } else {
+            vec![]
+        };
         let link = ctx.link();
+        log_2(&"number of steps:".into(), &steps.len().into());
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
@@ -94,7 +99,14 @@ impl Component for Calculator {
                 ) }
                 <AddItem onclick={link.callback(|m| m)}/>
                 </InputList>
-                { if let Err(why) = &self.calculation { format!("An error occured: {}", why) } else { "no errors".into() } }
+                <p>{ if let Err(why) = &self.calculation { format!("An error occured: {}", why) } else { "no errors".into() } }</p>
+                <FactorySteps>
+                {
+                    for steps.iter().map(|step| {
+                        html_nested! { <FactoryStep step={step.clone()} /> }
+                    })
+                }
+                </FactorySteps>
             </div>
         }
     }
@@ -176,6 +188,7 @@ impl Calculation {
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val -= amount;
         }
+        self.steps.push(step)
     }
 
     fn is_solved(&self) -> bool {
@@ -233,7 +246,7 @@ impl Calculation {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CalcStep {
     factory: Factory<'static>,
     amount: f64
@@ -247,9 +260,13 @@ impl CalcStep {
     fn consumed_per_sec(&self) -> Vec<(String, f64)> {
         self.factory.consumed_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
     }
+    
+    fn machine_name(&self) -> String {
+        self.factory.name()
+    }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Factory<'a> {
     AssemblingMachine(&'a AssemblingMachine, &'a Recipe),
     MiningDrill(&'a MiningDrill, &'a Resource)
@@ -280,6 +297,13 @@ impl<'a> Factory<'a> {
                     vec![]
                 }
             }
+        }
+    }
+
+    fn name(&self) -> String {
+        match self {
+            Factory::AssemblingMachine(a, _) => a.name.clone(),
+            Factory::MiningDrill(md, _) => md.name.clone()
         }
     }
 }
@@ -490,7 +514,7 @@ impl Component for ItemIcon {
     type Message = ();
     type Properties = ItemIconProperties;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
 
@@ -532,6 +556,62 @@ impl Component for AddItem {
             <li>
                 <button class="add-item" onclick={link.callback(|_| ())}> {"+"} </button>
             </li>
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FactorySteps;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct FactoryStepsProperties {
+    #[prop_or_default]
+    children: ChildrenWithProps<FactoryStep>
+}
+
+impl Component for FactorySteps {
+    type Message = ();
+    type Properties = FactoryStepsProperties;
+
+    fn create(ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        log_1(&ctx.props().children.len().into());
+        html! {
+            <ul class="factory-steps">
+                { for ctx.props().children.iter() }
+            </ul>
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FactoryStep;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct FactoryStepProperties {
+    step: CalcStep
+}
+
+impl Component for FactoryStep {
+    type Message = ();
+    type Properties = FactoryStepProperties;
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let props = ctx.props();
+        html!{
+            <li><p> { format!("{}x \"{}\" producing \"{}\"" ,
+                props.step.amount,
+                props.step.machine_name(),
+                props.step.produced_per_sec().iter()
+                .map(|(name, amount)| format!("{} x{}", name, amount)).collect::<Vec<String>>()
+                .join(", ")) } </p></li>
         }
     }
 }
