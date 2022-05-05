@@ -5,7 +5,7 @@ use thiserror::Error;
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
-use web_sys::{EventTarget, HtmlInputElement, console::log_2};
+use web_sys::{EventTarget, HtmlInputElement, console::{log_2, log_1}};
 use yew::{virtual_dom::VChild, prelude::*};
 use yew_router::prelude::*;
 use once_cell::sync::Lazy;
@@ -116,7 +116,7 @@ pub enum CalculationError {
 
 #[derive(Debug, Clone, Default)]
 pub struct Calculation {
-    vector: HashMap<String, f32>,
+    vector: HashMap<String, f64>,
     pub steps: Vec<CalcStep>
 }
 
@@ -134,7 +134,7 @@ impl Calculation {
             let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
             if let Some(recipe) = Self::find_recipe_for_item(&item.0) {
                 if let Some(assembling_machine) = Self::find_assembling_machine_for_recipe(&recipe.category) {
-                    let amount = item.1 * recipe.energy_required() / assembling_machine.crafting_speed;
+                    let amount = (item.1 * recipe.energy_required()) / assembling_machine.crafting_speed;
                     let step = CalcStep {
                         factory: Factory::AssemblingMachine(assembling_machine, recipe),
                         amount
@@ -145,7 +145,7 @@ impl Calculation {
                 }
             } else if let Some(resource) = Self::find_resource_for_item(&item.0) {
                 if let Some(mining_drill) = Self::find_mining_drill_for_resource(&resource.category) {
-                    let amount = item.1 * resource.mining_time / mining_drill.mining_speed;
+                    let amount = (item.1 * resource.mining_time) / mining_drill.mining_speed;
                     let step = CalcStep {
                         factory: Factory::MiningDrill(mining_drill, resource),
                         amount
@@ -163,6 +163,7 @@ impl Calculation {
     }
 
     pub fn apply_step(&mut self, step: CalcStep) {
+        log_1(&"applied step".into());
         let produced = step.produced_per_sec();
         let consumed = step.consumed_per_sec();
 
@@ -178,13 +179,16 @@ impl Calculation {
     }
 
     fn is_solved(&self) -> bool {
-        self.vector.values().sum::<f32>() == 0.0
+        //self.vector.values().sum::<f64>() == 0.0
+        !self.vector.values().any(|i| *i < 0.0)
     }
 
-    fn pick_item(&self) -> Option<(String, f32)> {
+    fn pick_item(&self) -> Option<(String, f64)> {
+        log_1(&"trying to pick an item".into());
         for (name, value) in &self.vector {
             log_2(&name.into(), &(*value).into());
             if value < &0.0 {
+                log_1(&format!("Picked {} {}", &name, value).into());
                 return Some((name.clone(), -value))
             }
         }
@@ -211,7 +215,7 @@ impl Calculation {
 
     fn find_resource_for_item(item: &str) -> Option<&'static Resource> {
         for resource in GAME_DATA.resources.values() {
-            let results: Vec<(String, f32)> = (&resource.results).into();
+            let results: Vec<(String, f64)> = (&resource.results).into();
             if results.iter().any(|(x, _)| x == item) {
                 return Some(resource)
             }
@@ -232,15 +236,15 @@ impl Calculation {
 #[derive(Debug, Clone)]
 pub struct CalcStep {
     factory: Factory<'static>,
-    amount: f32
+    amount: f64
 }
 
 impl CalcStep {
-    fn produced_per_sec(&self) -> Vec<(String, f32)> {
+    fn produced_per_sec(&self) -> Vec<(String, f64)> {
         self.factory.produced_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
     }
 
-    fn consumed_per_sec(&self) -> Vec<(String, f32)> {
+    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
         self.factory.consumed_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
     }
 }
@@ -252,7 +256,7 @@ pub enum Factory<'a> {
 }
 
 impl<'a> Factory<'a> {
-    fn produced_per_sec(&self) -> Vec<(String, f32)> {
+    fn produced_per_sec(&self) -> Vec<(String, f64)> {
         match self {
             Factory::AssemblingMachine(am, re) => re
                 .produces()
@@ -260,13 +264,13 @@ impl<'a> Factory<'a> {
                 .map(|(name, amount)| (name, (am.crafting_speed / re.energy_required()) * amount))
                 .collect(),
             Factory::MiningDrill(md, re) => {
-                let temp: Vec<(String, f32)> = (&re.results).into();
+                let temp: Vec<(String, f64)> = (&re.results).into();
                 temp.into_iter().map(|(name, amount)| (name, (md.mining_speed / re.mining_time) * amount)).collect()
             }
         }
     }
 
-    fn consumed_per_sec(&self) -> Vec<(String, f32)> {
+    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
         match self {
             Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, r.energy_required() / a.crafting_speed * amount)).collect(),
             Factory::MiningDrill(md, re) => {
@@ -294,19 +298,19 @@ impl Default for CalcTarget {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CalcTargetRate {
-    Factories(f32),
-    ItemsPerSecond(f32)
+    Factories(f64),
+    ItemsPerSecond(f64)
 }
 
 impl CalcTargetRate {
-    pub fn as_factories(&self, factory_ips: f32) -> f32 {
+    pub fn as_factories(&self, factory_ips: f64) -> f64 {
         match self {
             Self::Factories(f) => *f,
             Self::ItemsPerSecond(i) => i / factory_ips
         }
     }
 
-    pub fn as_ips(&self, factory_ips: f32) -> f32 {
+    pub fn as_ips(&self, factory_ips: f64) -> f64 {
         match self {
             Self::Factories(f) => f * factory_ips,
             Self::ItemsPerSecond(i) => *i
@@ -384,9 +388,9 @@ struct InputItem;
 struct InputItemProps {
     item: String,
     #[prop_or(1.0)]
-    factories: f32,
+    factories: f64,
     #[prop_or(1.0)]
-    items_per_second: f32,
+    items_per_second: f64,
     onchanged: Callback<<Calculator as Component>::Message>,
     index: usize
 }
@@ -396,8 +400,8 @@ enum InputItemMessage {
     Remove,
     OpenItem,
     ItemSelected(String),
-    Factories(f32),
-    ItemsPerSecond(f32)
+    Factories(f64),
+    ItemsPerSecond(f64)
 }
 
 impl Component for InputItem {
