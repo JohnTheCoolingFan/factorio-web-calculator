@@ -650,11 +650,11 @@ impl Component for FactoryStep {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
         html!{
-            <li><p> { format!("{}x \"{}\" producing \"{}\"" ,
+            <li><p> { format!("{:.3}x \"{}\" producing {}" ,
                 props.step.amount,
                 props.step.machine_name(),
                 props.step.produced_per_sec().iter()
-                .map(|(name, amount)| format!("{} x{}", name, amount)).collect::<Vec<String>>()
+                .map(|(name, amount)| format!("\"{}\" x{:.3}", name, amount)).collect::<Vec<String>>()
                 .join(", ")) } </p></li>
         }
     }
