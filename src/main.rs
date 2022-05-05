@@ -261,6 +261,14 @@ impl<'a> Factory<'a> {
         }
     }
 
+    fn icon_prefix(&self) -> &str {
+        match self {
+            Factory::AssemblingMachine(_, _) => "assembling-machine",
+            Factory::MiningDrill(_, _) => "mining-drill",
+            Factory::OffshorePump(_) => "offshore-pump"
+        }
+    }
+
     fn name(&self) -> String {
         match self {
             Factory::AssemblingMachine(am, _) => am.name.clone(),
