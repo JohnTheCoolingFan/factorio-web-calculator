@@ -161,16 +161,18 @@ impl Calculation {
     }
 
     pub fn apply_step(&mut self, step: CalcStep) {
-        log::info!("Applying step");
+        log::info!("Applying step in amount {:.3}", step.amount);
         let produced = step.produced_per_sec();
         let consumed = step.consumed_per_sec();
 
         for (name, amount) in &produced {
+            log::info!("ingredient {} produced in amount of {:.3}", name, amount);
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val += amount;
         }
 
         for (name, amount) in &consumed {
+            log::info!("ingredient {} consumed in amount of {:.3}", name, amount);
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val -= amount;
         }
@@ -185,7 +187,7 @@ impl Calculation {
     fn pick_item(&self) -> Option<(String, f64)> {
         log::info!("Picking an item");
         for (name, value) in &self.vector {
-            log::info!("Trying {}, {}", name, value);
+            log::info!("Trying {}, {:.3}", name, value);
             if (value < &0.0) && (value.abs() > VERY_SMALL) {
                 log::info!("Picked!");
                 return Some((name.clone(), -value))
@@ -249,7 +251,7 @@ impl<'a> Factory<'a> {
 
     fn consumed_per_sec(&self) -> Vec<(String, f64)> {
         match self {
-            Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, r.energy_required() / a.crafting_speed * amount)).collect(),
+            Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, (a.crafting_speed / r.energy_required()) * amount)).collect(),
             Factory::MiningDrill(md, re) => {
                 if let Some(fluid_requirement) = &re.fluid_requirement {
                     vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (re.mining_time / md.mining_speed))]
