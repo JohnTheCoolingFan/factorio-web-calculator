@@ -254,7 +254,7 @@ impl<'a> Factory<'a> {
             Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, (a.crafting_speed / r.energy_required()) * amount)).collect(),
             Factory::MiningDrill(md, re) => {
                 if let Some(fluid_requirement) = &re.fluid_requirement {
-                    vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (re.mining_time / md.mining_speed))]
+                    vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (md.mining_speed / re.mining_time))]
                 } else {
                     vec![]
                 }
