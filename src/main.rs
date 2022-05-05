@@ -17,6 +17,7 @@ const DOWNSCALE: usize = 2;
 const SPRITESHEET_SIZE: usize = ORIGINAL_SPRITESHEET_SIZE / DOWNSCALE;
 const ICON_SIZE: usize = ORIGINAL_ICON_SIZE / DOWNSCALE;
 const RECURSION_LIMIT: usize = 500;
+const VERY_SMALL: f64 = 1e-10;
 
 static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
     let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
@@ -147,7 +148,7 @@ impl Calculation {
             recursion_limit -= 1;
             let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
             let factory = Factory::for_item(&item.0)?;
-            let amount = (item.1 * factory.energy_required()) / (factory.crafting_speed() * factory.item_produced_per_sec(&item.0));
+            let amount = (item.1 * factory.energy_required()) / factory.crafting_speed();
             let step = CalcStep { factory, amount };
             self.apply_step(step);
         }
@@ -178,14 +179,14 @@ impl Calculation {
 
     fn is_solved(&self) -> bool {
         //self.vector.values().sum::<f64>() == 0.0
-        self.vector.values().all(|i| *i >= 0.0)
+        self.vector.values().all(|i| (*i >= 0.0) || (i.abs() < VERY_SMALL))
     }
 
     fn pick_item(&self) -> Option<(String, f64)> {
         log_1(&"trying to pick an item".into());
         for (name, value) in &self.vector {
             log_2(&name.into(), &(*value).into());
-            if value < &0.0 {
+            if (value < &0.0) && (value.abs() > VERY_SMALL) {
                 log_1(&format!("Picked {} {}", &name, value).into());
                 return Some((name.clone(), -value))
             }
