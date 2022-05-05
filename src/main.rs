@@ -129,7 +129,7 @@ impl Calculation {
             self.vector.insert(name, -items_per_second);
         }
 
-        while !self.is_solved() || recursion_limit > 0 {
+        while !self.is_solved() && recursion_limit > 0 {
             recursion_limit -= 1;
             let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
             if let Some(recipe) = Self::find_recipe_for_item(&item.0) {
@@ -180,7 +180,7 @@ impl Calculation {
 
     fn is_solved(&self) -> bool {
         //self.vector.values().sum::<f64>() == 0.0
-        !self.vector.values().any(|i| *i < 0.0)
+        self.vector.values().all(|i| *i >= 0.0)
     }
 
     fn pick_item(&self) -> Option<(String, f64)> {
