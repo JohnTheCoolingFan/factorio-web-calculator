@@ -5,7 +5,7 @@ use thiserror::Error;
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{events::Event, html::ChildrenRenderer};
-use web_sys::{EventTarget, HtmlInputElement, console::{log_2, log_1}};
+use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, prelude::*};
 use once_cell::sync::Lazy;
 
@@ -85,7 +85,7 @@ impl Component for Calculator {
             vec![]
         };
         let link = ctx.link();
-        log_2(&"number of steps:".into(), &steps.len().into());
+        log::info!("number of steps: {}", steps.len());
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
@@ -161,7 +161,7 @@ impl Calculation {
     }
 
     pub fn apply_step(&mut self, step: CalcStep) {
-        log_1(&"applied step".into());
+        log::info!("Applying step");
         let produced = step.produced_per_sec();
         let consumed = step.consumed_per_sec();
 
@@ -183,11 +183,11 @@ impl Calculation {
     }
 
     fn pick_item(&self) -> Option<(String, f64)> {
-        log_1(&"trying to pick an item".into());
+        log::info!("Picking an item");
         for (name, value) in &self.vector {
-            log_2(&name.into(), &(*value).into());
+            log::info!("Trying {}, {}", name, value);
             if (value < &0.0) && (value.abs() > VERY_SMALL) {
-                log_1(&format!("Picked {} {}", &name, value).into());
+                log::info!("Picked!");
                 return Some((name.clone(), -value))
             }
         }
@@ -661,12 +661,11 @@ impl Component for FactorySteps {
     type Message = ();
     type Properties = FactoryStepsProperties;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        log_1(&ctx.props().children.len().into());
         html! {
             <ul class="factory-steps">
                 { for ctx.props().children.iter() }
@@ -697,7 +696,7 @@ impl Component for FactoryStep {
         html!{
             <li><p>
                 {format!("{:.3}x ", famount)}
-                <SpriteSheetIcon prefix={props.step.factory.icon_prefix().to_string()} name={props.step.factory.name()} />
+                <SpriteSheetIcon prefix={props.step.factory.icon_prefix().to_string()} name={props.step.machine_name()} />
                 {" producing "}
                 {
                     for props.step.produced_per_sec().iter().map(|(name, amount)| {
@@ -715,5 +714,6 @@ impl Component for FactoryStep {
 }
 
 fn main() {
+    wasm_logger::init(wasm_logger::Config::default());
     yew::start_app::<Calculator>();
 }
