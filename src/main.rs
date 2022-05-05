@@ -92,21 +92,9 @@ impl Component for Calculator {
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
-                    let ips = if let Ok(factory) = Factory::for_item(&t.name) {
-                        let mut result = 1.0;
-                        for (name, amount) in factory.produced_per_sec() {
-                            if name == t.name {
-                                result = amount
-                            }
-                        }
-                        result
-                    } else {
-                        1.0
-                    };
                     html_nested! { <InputItem
                         item={t.name.clone()}
-                        factories={t.rate.as_factories(ips)}
-                        items_per_second={t.rate.as_ips(ips)}
+                        rate={t.rate.clone()}
                         onchanged={link.callback(|m| m)}
                         index = {i} /> }
                 }) }
@@ -467,10 +455,7 @@ struct InputItem;
 #[derive(Debug, Clone, PartialEq, Properties)]
 struct InputItemProps {
     item: String,
-    #[prop_or(1.0)]
-    factories: f64,
-    #[prop_or(1.0)]
-    items_per_second: f64,
+    rate: CalcTargetRate,
     onchanged: Callback<<Calculator as Component>::Message>,
     index: usize
 }
@@ -538,6 +523,18 @@ impl Component for InputItem {
             input.and_then(|i| Some(InputItemMessage::ItemSelected(i.value().parse().ok()?)))
         });
 
+        let ips = if let Ok(factory) = Factory::for_item(&props.item) {
+            let mut result = 1.0;
+            for (name, amount) in factory.produced_per_sec() {
+                if name == props.item {
+                    result = amount
+                }
+            }
+            result
+        } else {
+            1.0
+        };
+
         html! {
             <li class="target">
                 // Remove this item from the list
@@ -546,10 +543,10 @@ impl Component for InputItem {
                 <button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
                 // Input factories
                 {"Factories: "}
-                <input type="text" onchange={on_factories_change} value={props.factories.to_string()} />
+                <input type="text" onchange={on_factories_change} value={props.rate.as_factories(ips).to_string()} />
                 // Input Items Per Second
                 {"items/s: "}
-                <input type="text" onchange={on_ips_change} value={props.items_per_second.to_string()}/>
+                <input type="text" onchange={on_ips_change} value={props.rate.as_ips(ips).to_string()}/>
                 // Input item manually
                 {"item: "}
                 <input type="text" onchange={on_item_selected} value={props.item.clone()}/>
