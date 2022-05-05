@@ -16,6 +16,7 @@ const ORIGINAL_ICON_SIZE: usize = 64;
 const DOWNSCALE: usize = 2;
 const SPRITESHEET_SIZE: usize = ORIGINAL_SPRITESHEET_SIZE / DOWNSCALE;
 const ICON_SIZE: usize = ORIGINAL_ICON_SIZE / DOWNSCALE;
+const RECURSION_LIMIT: usize = 500;
 
 static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
     let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
@@ -134,41 +135,25 @@ pub struct Calculation {
 
 impl Calculation {
     pub fn solve(mut self, input: &[CalcTarget]) -> Result<Self, CalculationError> {
-        let mut recursion_limit = 500;
         for target in input {
-            let name = target.name.clone();
-            let items_per_second = target.rate.as_ips(1.0);
-            self.vector.insert(name, -items_per_second);
+            let name = &target.name.clone();
+            let factory = Factory::for_item(name)?;
+            let items_per_second = target.rate.as_ips(factory.item_produced_per_sec(name));
+            self.vector.insert(name.clone(), -items_per_second);
         }
 
+        let mut recursion_limit = RECURSION_LIMIT;
         while !self.is_solved() && recursion_limit > 0 {
             recursion_limit -= 1;
             let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
-            if let Some(recipe) = Self::find_recipe_for_item(&item.0) {
-                if let Some(assembling_machine) = Self::find_assembling_machine_for_recipe(&recipe.category) {
-                    let amount = (item.1 * recipe.energy_required()) / assembling_machine.crafting_speed;
-                    let step = CalcStep {
-                        factory: Factory::AssemblingMachine(assembling_machine, recipe),
-                        amount
-                    };
-                    self.apply_step(step)
-                } else {
-                    return Err(CalculationError::AssemblingMachineNotFound(recipe.name.clone()))
-                }
-            } else if let Some(resource) = Self::find_resource_for_item(&item.0) {
-                if let Some(mining_drill) = Self::find_mining_drill_for_resource(&resource.category) {
-                    let amount = (item.1 * resource.mining_time) / mining_drill.mining_speed;
-                    let step = CalcStep {
-                        factory: Factory::MiningDrill(mining_drill, resource),
-                        amount
-                    };
-                    self.apply_step(step)
-                } else {
-                    return Err(CalculationError::MiningDrillNotFound(resource.name.clone()))
-                }
-            } else {
-                return Err(CalculationError::RecipeOrResourceNotFound(item.0))
-            }
+            let factory = Factory::for_item(&item.0)?;
+            let amount = (item.1 * factory.energy_required()) / (factory.crafting_speed() * factory.item_produced_per_sec(&item.0));
+            let step = CalcStep { factory, amount };
+            self.apply_step(step);
+        }
+
+        if recursion_limit == 0 {
+            return Err(CalculationError::RecursionLimit)
         }
 
         Ok(self)
@@ -207,6 +192,117 @@ impl Calculation {
         }
         None
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CalcStep {
+    factory: Factory<'static>,
+    amount: f64
+}
+
+impl CalcStep {
+    fn produced_per_sec(&self) -> Vec<(String, f64)> {
+        self.factory.produced_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
+    }
+
+    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
+        self.factory.consumed_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
+    }
+    
+    fn machine_name(&self) -> String {
+        self.factory.name()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Factory<'a> {
+    AssemblingMachine(&'a AssemblingMachine, &'a Recipe),
+    MiningDrill(&'a MiningDrill, &'a Resource),
+    OffshorePump(&'a OffshorePump)
+}
+
+impl<'a> Factory<'a> {
+    fn produced_per_sec(&self) -> Vec<(String, f64)> {
+        match self {
+            Factory::AssemblingMachine(am, re) => re
+                .produces()
+                .into_iter()
+                .map(|(name, amount)| (name, (am.crafting_speed / re.energy_required()) * amount))
+                .collect(),
+            Factory::MiningDrill(md, re) => {
+                let temp: Vec<(String, f64)> = (&re.results).into();
+                temp.into_iter().map(|(name, amount)| (name, (md.mining_speed / re.mining_time) * amount)).collect()
+            },
+            Factory::OffshorePump(op) => vec![(op.fluid.clone(), op.pumping_speed)]
+        }
+    }
+
+    fn item_produced_per_sec(&self, item: &str) -> f64 {
+        for product in self.produced_per_sec() {
+            if product.0 == item {
+                return product.1
+            }
+        }
+        0.0
+    }
+
+    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
+        match self {
+            Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, r.energy_required() / a.crafting_speed * amount)).collect(),
+            Factory::MiningDrill(md, re) => {
+                if let Some(fluid_requirement) = &re.fluid_requirement {
+                    vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (re.mining_time / md.mining_speed))]
+                } else {
+                    vec![]
+                }
+            },
+            _ => vec![]
+        }
+    }
+
+    fn name(&self) -> String {
+        match self {
+            Factory::AssemblingMachine(am, _) => am.name.clone(),
+            Factory::MiningDrill(md, _) => md.name.clone(),
+            Factory::OffshorePump(op) => op.name.clone()
+        }
+    }
+
+    fn crafting_speed(&self) -> f64 {
+        match self {
+            Factory::AssemblingMachine(am, _) => am.crafting_speed,
+            Factory::MiningDrill(md, _) => md.mining_speed,
+            Factory::OffshorePump(op) => op.pumping_speed
+        }
+    }
+
+    fn energy_required(&self) -> f64 {
+        match self {
+            Factory::AssemblingMachine(_, recipe) => recipe.energy_required(),
+            Factory::MiningDrill(_, resource) => resource.mining_time,
+            Factory::OffshorePump(_) => 1.0
+        }
+    }
+
+    fn for_item(item: &str) -> Result<Self, CalculationError> {
+        if let Some(offshore_pump) = Self::find_offshore_pump_for_item(item) {
+            Ok(Self::OffshorePump(offshore_pump))
+        } else if let Some(resource) = Self::find_resource_for_item(item) {
+            if let Some(mining_drill) = Self::find_mining_drill_for_resource(&resource.category) {
+                Ok(Self::MiningDrill(mining_drill, resource))
+            } else {
+                Err(CalculationError::MiningDrillNotFound(resource.category.clone()))
+            }
+        } else if let Some(recipe) = Self::find_recipe_for_item(item) {
+            if let Some(assembling_machine) = Self::find_assembling_machine_for_recipe(&recipe.category) {
+                Ok(Self::AssemblingMachine(assembling_machine, recipe))
+            } else {
+                Err(CalculationError::AssemblingMachineNotFound(recipe.category.clone()))
+            }
+        } else {
+            Err(CalculationError::RecipeOrResourceNotFound(item.into()))
+        }
+    }
 
     fn find_recipe_for_item(item: &str) -> Option<&'static Recipe> {
         for recipe in GAME_DATA.recipes.values() {
@@ -244,67 +340,14 @@ impl Calculation {
         }
         None
     }
-}
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct CalcStep {
-    factory: Factory<'static>,
-    amount: f64
-}
-
-impl CalcStep {
-    fn produced_per_sec(&self) -> Vec<(String, f64)> {
-        self.factory.produced_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
-    }
-
-    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
-        self.factory.consumed_per_sec().into_iter().map(|(name, amount)| (name, amount * self.amount)).collect()
-    }
-    
-    fn machine_name(&self) -> String {
-        self.factory.name()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Factory<'a> {
-    AssemblingMachine(&'a AssemblingMachine, &'a Recipe),
-    MiningDrill(&'a MiningDrill, &'a Resource)
-}
-
-impl<'a> Factory<'a> {
-    fn produced_per_sec(&self) -> Vec<(String, f64)> {
-        match self {
-            Factory::AssemblingMachine(am, re) => re
-                .produces()
-                .into_iter()
-                .map(|(name, amount)| (name, (am.crafting_speed / re.energy_required()) * amount))
-                .collect(),
-            Factory::MiningDrill(md, re) => {
-                let temp: Vec<(String, f64)> = (&re.results).into();
-                temp.into_iter().map(|(name, amount)| (name, (md.mining_speed / re.mining_time) * amount)).collect()
+    fn find_offshore_pump_for_item(item: &str) -> Option<&'static OffshorePump> {
+        for offshore_pump in GAME_DATA.offshore_pumps.values() {
+            if offshore_pump.fluid == item {
+                return Some(offshore_pump)
             }
         }
-    }
-
-    fn consumed_per_sec(&self) -> Vec<(String, f64)> {
-        match self {
-            Factory::AssemblingMachine(a, r) => r.consumes().into_iter().map(|(name, amount)| (name, r.energy_required() / a.crafting_speed * amount)).collect(),
-            Factory::MiningDrill(md, re) => {
-                if let Some(fluid_requirement) = &re.fluid_requirement {
-                    vec![(fluid_requirement.required_fluid.clone(), fluid_requirement.fluid_amount * (re.mining_time / md.mining_speed))]
-                } else {
-                    vec![]
-                }
-            }
-        }
-    }
-
-    fn name(&self) -> String {
-        match self {
-            Factory::AssemblingMachine(a, _) => a.name.clone(),
-            Factory::MiningDrill(md, _) => md.name.clone()
-        }
+        None
     }
 }
 
