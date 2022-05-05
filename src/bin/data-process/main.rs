@@ -118,14 +118,16 @@ fn main() {
     let mut complex_icons: HashMap<String, Vec<IconData>> = HashMap::new(); // map name of item to icon data
 
     println!("Processing icons for items");
-    game_data.items.iter().for_each(|(_, item)| {
-        insert_icon(&item.icon, &item.name, "item", &mut complex_icons, &mut simple_icons)
-    });
+    game_data.items.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "item", &mut complex_icons, &mut simple_icons));
 
     println!("Processing icons for assembling machines");
-    game_data.assembling_machines.iter().for_each(|(_, item)| {
-        insert_icon(&item.icon, &item.name, "assembling-machine", &mut complex_icons, &mut simple_icons)
-    });
+    game_data.assembling_machines.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "assembling-machine", &mut complex_icons, &mut simple_icons));
+
+    println!("Processing icons for mining drills");
+    game_data.mining_drills.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "mining-drill", &mut complex_icons, &mut simple_icons));
+
+    println!("Processing icons for offshore pumps");
+    game_data.offshore_pumps.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "offshore-pump", &mut complex_icons, &mut simple_icons));
 
     println!("Processing complex icons");
     let complex_icons: HashMap<String, RgbaImage> = complex_icons.into_iter().map(|(k, icons)| generate_complex_icon(k, icons, &path_resolver)).collect();
