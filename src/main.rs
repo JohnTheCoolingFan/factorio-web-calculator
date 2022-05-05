@@ -588,7 +588,7 @@ impl Component for SpriteSheetIcon {
             .unwrap_or(&(ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
                     ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE));
         html! {
-            <img src="assets/empty.gif" style={ format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE) }/>
+            <img src="assets/empty.gif" title={props.name.clone()} alt={props.name.clone()} style={ format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE) }/>
         }
     }
 }
