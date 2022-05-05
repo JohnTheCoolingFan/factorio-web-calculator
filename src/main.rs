@@ -120,6 +120,7 @@ impl Component for Calculator {
                     })
                 }
                 </FactorySteps>
+                <h6>{ "Warning: might contain slight side-effects including but not limited to 3200 oil refineries" }</h6>
             </div>
         }
     }
