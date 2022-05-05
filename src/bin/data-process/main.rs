@@ -225,10 +225,10 @@ fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathReso
 fn tint_pixel(pixel: &mut Rgba<u8>, tint: &TintColor) {
     // FIXME: barrels are broken
     let channels_a = pixel.channels_mut();
-    channels_a[0] = ((channels_a[0] as f32 * (tint.r * 255.0)) / 255.0) as u8;
-    channels_a[1] = ((channels_a[1] as f32 * (tint.g * 255.0)) / 255.0) as u8;
-    channels_a[2] = ((channels_a[2] as f32 * (tint.b * 255.0)) / 255.0) as u8;
-    channels_a[3] = ((channels_a[3] as f32 * (tint.a * 255.0)) / 255.0) as u8;
+    channels_a[0] = ((channels_a[0] as f64 * (tint.r * 255.0)) / 255.0) as u8;
+    channels_a[1] = ((channels_a[1] as f64 * (tint.g * 255.0)) / 255.0) as u8;
+    channels_a[2] = ((channels_a[2] as f64 * (tint.b * 255.0)) / 255.0) as u8;
+    channels_a[3] = ((channels_a[3] as f64 * (tint.a * 255.0)) / 255.0) as u8;
 }
 
 fn get_data(difficulty: &str, json_data: &Value) -> GameData {
