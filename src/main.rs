@@ -269,6 +269,17 @@ impl<'a> Factory<'a> {
         }
     }
 
+    fn ips_for_item(item: &str) -> f64 {
+        if let Ok(factory) = Self::for_item(item) {
+            for (name, amount) in factory.produced_per_sec() {
+                if name == item {
+                    return amount
+                }
+            }
+        }
+        1.0
+    }
+
     fn crafting_speed(&self) -> f64 {
         match self {
             Factory::AssemblingMachine(am, _) => am.crafting_speed,
@@ -523,17 +534,7 @@ impl Component for InputItem {
             input.and_then(|i| Some(InputItemMessage::ItemSelected(i.value().parse().ok()?)))
         });
 
-        let ips = if let Ok(factory) = Factory::for_item(&props.item) {
-            let mut result = 1.0;
-            for (name, amount) in factory.produced_per_sec() {
-                if name == props.item {
-                    result = amount
-                }
-            }
-            result
-        } else {
-            1.0
-        };
+        let ips = Factory::ips_for_item(&props.item);
 
         html! {
             <li class="target">
