@@ -119,18 +119,12 @@ fn main() {
 
     println!("Processing icons for items");
     game_data.items.iter().for_each(|(_, item)| {
-        match &item.icon {
-            Icon::Simple(icon) => {simple_icons.entry(icon.clone()).or_insert_with(HashSet::new).insert(format!("item-{}", &item.name));},
-            Icon::Icons(icons) => {complex_icons.insert(format!("item-{}", &item.name), icons.clone());},
-        };
+        insert_icon(&item.icon, &item.name, "item", &mut complex_icons, &mut simple_icons)
     });
 
     println!("Processing icons for assembling machines");
     game_data.assembling_machines.iter().for_each(|(_, item)| {
-        match &item.icon {
-            Icon::Simple(icon) => {simple_icons.entry(icon.clone()).or_insert_with(HashSet::new).insert(format!("assembling-machine-{}", &item.name));},
-            Icon::Icons(icons) => {complex_icons.insert(format!("assembling-machine-{}", &item.name), icons.clone());},
-        }
+        insert_icon(&item.icon, &item.name, "assembling-machine", &mut complex_icons, &mut simple_icons)
     });
 
     println!("Processing complex icons");
@@ -201,6 +195,13 @@ fn main() {
         }
     }
     */
+}
+
+fn insert_icon(icon: &Icon, name: &str, prefix: &str, complex_icons: &mut HashMap<String, Vec<IconData>>, simple_icons: &mut HashMap<String, HashSet<String>>) {
+    match icon {
+        Icon::Simple(icon) => {simple_icons.entry(icon.clone()).or_insert_with(HashSet::new).insert(format!("{}-{}", prefix, name));},
+        Icon::Icons(icons) => {complex_icons.insert(format!("{}-{}", prefix, name), icons.clone());},
+    };
 }
 
 fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathResolver) -> (String, RgbaImage) {
