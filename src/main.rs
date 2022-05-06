@@ -116,7 +116,7 @@ impl Component for Calculator {
 
 #[derive(Debug, Error)]
 pub enum CalculationError {
-    #[error("Recipe or Resource for item {0} npt found")]
+    #[error("Recipe or Resource for item {0} not found")]
     RecipeOrResourceNotFound(String),
     #[error("Assembling machine for recipe {0} not found")]
     AssemblingMachineNotFound(String),
