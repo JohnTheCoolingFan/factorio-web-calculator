@@ -148,7 +148,9 @@ impl Calculation {
             recursion_limit -= 1;
             let item = self.pick_item().ok_or(CalculationError::NoItemToPick)?;
             let factory = Factory::for_item(&item.0)?;
-            let amount = (item.1 * factory.energy_required()) / factory.crafting_speed();
+            let mut amount = (item.1 * factory.energy_required()) / factory.crafting_speed();
+            amount /= factory.item_produced_per_recipe(&item.0);
+            log::info!("Amount will be divided by {}", factory.item_produced_per_recipe(&item.0));
             let step = CalcStep { factory, amount };
             self.apply_step(step);
         }
@@ -247,6 +249,29 @@ impl<'a> Factory<'a> {
             }
         }
         0.0
+    }
+
+    fn item_produced_per_recipe(&self, item: &str) -> f64 {
+        match self {
+            Factory::AssemblingMachine(_, re) => {
+                for product in &re.produces() {
+                    if product.0 == item {
+                        return product.1
+                    }
+                }
+                0.0
+            },
+            Factory::MiningDrill(_, re) => {
+                let products: Vec<(String, f64)> = (&re.results).into();
+                for product in &products {
+                    if product.0 == item {
+                        return product.1
+                    }
+                }
+                0.0
+            },
+            Factory::OffshorePump(op) => op.pumping_speed
+        }
     }
 
     fn consumed_per_sec(&self) -> Vec<(String, f64)> {
