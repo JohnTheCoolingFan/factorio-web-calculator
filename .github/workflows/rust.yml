@@ -16,6 +16,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install wasm target
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        default: true
+        target: wasm32-unknown-unknown
     - name: Clippy check
       run: cargo clippy
     - name: run tests
