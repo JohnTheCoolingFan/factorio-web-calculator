@@ -1,4 +1,3 @@
 /target
 /dist
-/assets/generated
-/assets/processed-data.json
+/assets/generated/generated-icons
