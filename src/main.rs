@@ -16,7 +16,7 @@ const ORIGINAL_ICON_SIZE: usize = 64;
 const DOWNSCALE: usize = 2;
 const SPRITESHEET_SIZE: usize = ORIGINAL_SPRITESHEET_SIZE / DOWNSCALE;
 const ICON_SIZE: usize = ORIGINAL_ICON_SIZE / DOWNSCALE;
-const RECURSION_LIMIT: usize = 500;
+const RECURSION_LIMIT: usize = 10000;
 const VERY_SMALL: f64 = 1e-10;
 
 static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
