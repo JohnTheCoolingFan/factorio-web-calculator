@@ -29,7 +29,7 @@ jobs:
         shasum -a 256 factorio-web-calculator.tar.gz > factorio-web-calculator.tar.gz.sha256
         shasum -a 256 factorio-web-calculator.zip > factorio-web-calculator.zip.sha256
     - name: Release
-      uses: softprops/action-gn-release@v1
+      uses: softprops/action-gh-release@v1
       with:
         files: |
           factorio-web-calculator.tar.gz
