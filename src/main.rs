@@ -89,6 +89,8 @@ impl Component for Calculator {
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
+                <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
+                <p> { "Please report any issues you encounter" } </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
