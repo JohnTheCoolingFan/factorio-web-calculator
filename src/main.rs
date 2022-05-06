@@ -270,7 +270,7 @@ impl<'a> Factory<'a> {
                 }
                 0.0
             },
-            Factory::OffshorePump(op) => op.pumping_speed
+            Factory::OffshorePump(_) => 1.0
         }
     }
 
