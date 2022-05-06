@@ -355,7 +355,7 @@ impl<'a> Factory<'a> {
 
     fn find_recipe_for_item(item: &str) -> Option<&'static Recipe> {
         for recipe in GAME_DATA.recipes.values() {
-            if recipe.produces().iter().any(|(x, _)| x == item) {
+            if recipe.produces().iter().any(|(x, _)| x == item) && recipe.allow_decomposition() {
                 return Some(recipe)
             }
         }

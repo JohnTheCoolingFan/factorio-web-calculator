@@ -99,6 +99,10 @@ impl Recipe {
     pub fn energy_required(&self) -> f64 {
         self.get_recipe_data().energy_required
     }
+
+    pub fn allow_decomposition(&self) -> bool {
+        self.get_recipe_data().allow_decomposition
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -120,11 +124,14 @@ pub struct RecipeData {
     pub energy_required: f64,
     pub ingredients: Vec<RecipeIngredient>,
     #[serde(flatten)]
-    pub results: RecipeResults
+    pub results: RecipeResults,
+    #[serde(default = "default_allow_decomposition")]
+    pub allow_decomposition: bool
 }
 
 fn default_recipe_category() -> String { "crafting".into() }
 const fn default_energy_required() -> f64 { 0.5 }
+const fn default_allow_decomposition() -> bool { true }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
