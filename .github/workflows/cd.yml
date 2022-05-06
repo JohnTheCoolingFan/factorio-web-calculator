@@ -36,6 +36,8 @@ jobs:
           factorio-web-calculator.tar.gz.sha256
           factorio-web-calculator.zip
           factorio-web-calculator.zip.sha256
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.3.3
+      with:
+        branch: gh-pages
+        folder: dist
