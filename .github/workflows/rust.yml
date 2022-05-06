@@ -33,3 +33,4 @@ jobs:
       uses: actions/cache@v3.0.2
       with:
         path: target
+        key: ${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
