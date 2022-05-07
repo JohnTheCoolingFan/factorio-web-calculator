@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use image::Rgba;
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +12,44 @@ pub struct GameData {
     pub mining_drills: HashMap<String, MiningDrill>,
     pub offshore_pumps: HashMap<String, OffshorePump>,
     pub resources: HashMap<String, Resource>
+}
+
+impl GameData {
+    pub fn recipe_categories_with_multiple_assemblers(&self) -> HashMap<String, Vec<&AssemblingMachine>> {
+        let mut categories: HashSet<String> = HashSet::new();
+        let mut result = HashMap::new();
+        for recipe in self.recipes.values() {
+            categories.insert(recipe.category.clone());
+        }
+        for category in categories {
+            let entry = result.entry(category).or_insert_with(Vec::new);
+            for assembling_machine in self.assembling_machines.values() {
+                if assembling_machine.crafting_categories.len() > 1 {
+                    entry.push(assembling_machine);
+                }
+            }
+        }
+        result.retain(|_, v| v.len() > 1);
+        result
+    }
+
+    pub fn resource_categories_with_multiple_miners(&self) -> HashMap<String, Vec<&MiningDrill>> {
+        let mut categories: HashSet<String> = HashSet::new();
+        let mut result = HashMap::new();
+        for resource in self.resources.values() {
+            categories.insert(resource.category.clone());
+        }
+        for category in categories {
+            let entry = result.entry(category).or_insert_with(Vec::new);
+            for mining_drill in self.mining_drills.values() {
+                if mining_drill.resource_categories.len() > 1 {
+                    entry.push(mining_drill);
+                }
+            }
+        }
+        result.retain(|_, v| v.len() > 1);
+        result
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
