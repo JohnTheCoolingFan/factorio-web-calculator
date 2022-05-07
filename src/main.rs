@@ -2,11 +2,10 @@ mod data;
 
 use data::*;
 use thiserror::Error;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::RwLock};
 use wasm_bindgen::JsCast;
-use yew::{events::Event, html::ChildrenRenderer};
 use web_sys::{EventTarget, HtmlInputElement};
-use yew::{virtual_dom::VChild, prelude::*};
+use yew::{virtual_dom::VChild, events::Event, html::ChildrenRenderer, prelude::*};
 use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "electronic-circuit";
@@ -45,7 +44,7 @@ impl UserSettings {
     }
 }
 
-static USER_SETTINGS: Lazy<UserSettings> = Lazy::new(|| {
+static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
     let mut recipe_category_prefs = HashMap::new();
     for (recipe_category, mut assemblers) in GAME_DATA.recipe_categories_with_multiple_assemblers() {
         assemblers.sort_by_key(|am| &am.name);
@@ -56,7 +55,7 @@ static USER_SETTINGS: Lazy<UserSettings> = Lazy::new(|| {
         mining_drills.sort_by_key(|am| &am.name);
         resource_category_prefs.insert(resource_category, mining_drills[0]);
     }
-    UserSettings{recipe_category_prefs, resource_category_prefs}
+    RwLock::new(UserSettings{recipe_category_prefs, resource_category_prefs})
 });
 
 #[derive(Debug)]
@@ -367,14 +366,14 @@ impl<'a> Factory<'a> {
         if let Some(offshore_pump) = Self::find_offshore_pump_for_item(item) {
             Ok(Self::OffshorePump(offshore_pump))
         } else if let Some(resource) = Self::find_resource_for_item(item) {
-            if let Some(mining_drill) = USER_SETTINGS.mining_drill(&resource.category)
+            if let Some(mining_drill) = USER_SETTINGS.read().ok().and_then(|us| us.mining_drill(&resource.category))
                 .or_else(|| Self::find_mining_drill_for_resource(&resource.category)) {
                 Ok(Self::MiningDrill(mining_drill, resource))
             } else {
                 Err(CalculationError::MiningDrillNotFound(resource.category.clone()))
             }
         } else if let Some(recipe) = Self::find_recipe_for_item(item) {
-            if let Some(assembling_machine) = USER_SETTINGS.assembling_machine(&recipe.category)
+            if let Some(assembling_machine) = USER_SETTINGS.read().ok().and_then(|us| us.assembling_machine(&recipe.category))
                 .or_else(|| Self::find_assembling_machine_for_recipe(&recipe.category)) {
                 Ok(Self::AssemblingMachine(assembling_machine, recipe))
             } else {
