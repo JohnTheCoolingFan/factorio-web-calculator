@@ -33,7 +33,7 @@ impl GameData {
         result
     }
 
-    pub fn resource_categories_with_multiple_miners(&self) -> HashMap<String, Vec<&MiningDrill>> {
+    pub fn resource_categories_with_multiple_mining_drills(&self) -> HashMap<String, Vec<&MiningDrill>> {
         let mut categories: HashSet<String> = HashSet::new();
         let mut result = HashMap::new();
         for resource in self.resources.values() {
