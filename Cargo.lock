@@ -218,6 +218,7 @@ name = "factorio-web-calculator"
 version = "0.1.8"
 dependencies = [
  "clap",
+ "gloo-storage",
  "image",
  "log",
  "once_cell",
