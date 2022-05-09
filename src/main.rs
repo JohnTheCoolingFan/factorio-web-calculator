@@ -43,6 +43,14 @@ impl UserSettings {
     fn mining_drill(&self, category: &str) -> Option<&'static MiningDrill> {
         Some(*self.resource_category_prefs.get(category)?)
     }
+
+    fn change_recipe_category(&mut self, category: &str, machine: &'static AssemblingMachine) {
+        self.recipe_category_prefs.insert(category.to_string(), machine);
+    }
+
+    fn change_resource_category(&mut self, category: &str, machine: &'static MiningDrill) {
+        self.resource_category_prefs.insert(category.to_string(), machine);
+    }
 }
 
 static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
