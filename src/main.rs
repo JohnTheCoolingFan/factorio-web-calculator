@@ -788,7 +788,7 @@ impl Component for FactoryStep {
         let famount = props.step.amount;
         html!{
             <li><p>
-                {format!("{:.3}x ", famount)}
+                {format!("{}x ", format!("{:.3}", famount).trim_end_matches('0').trim_end_matches('.'))}
                 <SpriteSheetIcon prefix={props.step.factory.icon_prefix().to_string()} name={props.step.machine_name()} />
                 {" producing "}
                 {
@@ -796,7 +796,7 @@ impl Component for FactoryStep {
                         html_nested! {
                             <>
                             <SpriteSheetIcon prefix={"item".to_string()} name={name.clone()}/>
-                            {format!("x{:.3}; ", amount)}
+                            {format!("{}; ", format!("x{:.3}", amount).trim_end_matches('0').trim_end_matches('.'))}
                             </>
                         }
                     })
