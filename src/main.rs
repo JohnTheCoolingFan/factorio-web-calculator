@@ -2,7 +2,7 @@ mod data;
 
 use data::*;
 use thiserror::Error;
-use std::{collections::HashMap, sync::RwLock};
+use std::{collections::HashMap, sync::RwLock, cmp::Ordering};
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, events::Event, html::ChildrenRenderer, prelude::*};
@@ -54,14 +54,17 @@ impl UserSettings {
 }
 
 static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
+    log::info!("User settings init");
     let mut recipe_category_prefs = HashMap::new();
     for (recipe_category, mut assemblers) in GAME_DATA.recipe_categories_with_multiple_assemblers() {
-        assemblers.sort_by_key(|am| &am.name);
+        assemblers.sort_by(|x, y| x.crafting_speed.partial_cmp(&y.crafting_speed).unwrap_or(Ordering::Equal));
+        log::info!("assembler for category {}: {}", recipe_category, assemblers[0].name);
         recipe_category_prefs.insert(recipe_category, assemblers[0]);
     }
     let mut resource_category_prefs = HashMap::new();
     for (resource_category, mut mining_drills) in GAME_DATA.resource_categories_with_multiple_mining_drills() {
-        mining_drills.sort_by_key(|am| &am.name);
+        mining_drills.sort_by(|x, y| x.mining_speed.partial_cmp(&y.mining_speed).unwrap_or(Ordering::Equal));
+        log::info!("mining drill for category {}: {}", resource_category, mining_drills[0].name);
         resource_category_prefs.insert(resource_category, mining_drills[0]);
     }
     RwLock::new(UserSettings{recipe_category_prefs, resource_category_prefs})
