@@ -6,6 +6,7 @@ use std::{collections::HashMap, sync::RwLock};
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, events::Event, html::ChildrenRenderer, prelude::*};
+use yew_router::prelude::*;
 use once_cell::sync::Lazy;
 
 const DEFAULT_ITEM: &str = "electronic-circuit";
@@ -57,6 +58,30 @@ static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
     }
     RwLock::new(UserSettings{recipe_category_prefs, resource_category_prefs})
 });
+
+#[derive(Debug, Clone, Routable, PartialEq)]
+enum Route {
+    #[at("/")]
+    Home,
+    #[at("/settings")]
+    Settings
+}
+
+fn switch(route: &Route) -> Html {
+    match route {
+        Route::Home => html! { <Calculator /> },
+        Route::Settings => html!{ <p> {"settings page"} </p> }
+    }
+}
+
+#[function_component(MainApp)]
+fn app() -> Html {
+    html! {
+        <BrowserRouter>
+            <Switch<Route> render={Switch::render(switch)} />
+        </BrowserRouter>
+    }
+}
 
 #[derive(Debug)]
 pub struct Calculator {
@@ -775,5 +800,5 @@ impl Component for FactoryStep {
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<Calculator>();
+    yew::start_app::<MainApp>();
 }
