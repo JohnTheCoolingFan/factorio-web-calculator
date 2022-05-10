@@ -1,6 +1,7 @@
 mod data;
 
 use data::*;
+use gloo_storage::Storage;
 use thiserror::Error;
 use std::{collections::HashMap, sync::RwLock, cmp::Ordering};
 use wasm_bindgen::JsCast;
@@ -8,6 +9,7 @@ use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, events::Event, html::ChildrenRenderer, prelude::*};
 use yew_router::prelude::*;
 use once_cell::sync::Lazy;
+use serde::{Serialize, Deserialize};
 
 const DEFAULT_ITEM: &str = "electronic-circuit";
 const UNKNOWN_ITEM: &str = "item-unknown";
@@ -46,28 +48,72 @@ impl UserSettings {
 
     fn change_recipe_category(&mut self, category: &str, machine: &'static AssemblingMachine) {
         self.recipe_category_prefs.insert(category.to_string(), machine);
+        self.write()
     }
 
     fn change_resource_category(&mut self, category: &str, machine: &'static MiningDrill) {
         self.resource_category_prefs.insert(category.to_string(), machine);
+        self.write()
+    }
+
+    fn write(&self) {
+        gloo_storage::LocalStorage::set("user_settings", RawUserSettings::from(self)).unwrap();
+    }
+
+    fn init() -> Self {
+        log::info!("User settings init");
+        let mut recipe_category_prefs = HashMap::new();
+        for (recipe_category, mut assemblers) in GAME_DATA.recipe_categories_with_multiple_assemblers() {
+            assemblers.sort_by(|x, y| x.crafting_speed.partial_cmp(&y.crafting_speed).unwrap_or(Ordering::Equal));
+            log::info!("assembler for category {}: {}", recipe_category, assemblers[0].name);
+            recipe_category_prefs.insert(recipe_category, assemblers[0]);
+        }
+        let mut resource_category_prefs = HashMap::new();
+        for (resource_category, mut mining_drills) in GAME_DATA.resource_categories_with_multiple_mining_drills() {
+            mining_drills.sort_by(|x, y| x.mining_speed.partial_cmp(&y.mining_speed).unwrap_or(Ordering::Equal));
+            log::info!("mining drill for category {}: {}", resource_category, mining_drills[0].name);
+            resource_category_prefs.insert(resource_category, mining_drills[0]);
+        }
+        let result = Self{recipe_category_prefs, resource_category_prefs};
+        result.write();
+        result
+    }
+
+    fn from_raw(raw_us: RawUserSettings) -> Self {
+        log::info!("Loading user settings");
+        Self {
+            recipe_category_prefs: raw_us.recipe_category_prefs.into_iter().map(|(cat, am)| (cat, GAME_DATA.assembling_machines.get(&am).unwrap())).collect(),
+            resource_category_prefs: raw_us.resource_category_prefs.into_iter().map(|(cat, md)| (cat, GAME_DATA.mining_drills.get(&md).unwrap())).collect()
+        }
+    }
+
+    fn create() -> Self {
+        if let Ok(us) = gloo_storage::LocalStorage::get("user_settings") {
+            Self::from_raw(us)
+        } else {
+            Self::init()
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RawUserSettings {
+    recipe_category_prefs: HashMap<String, String>,
+    resource_category_prefs: HashMap<String, String>
+}
+
+impl From<&UserSettings> for RawUserSettings {
+    fn from(us: &UserSettings) -> Self {
+        Self {
+            recipe_category_prefs: us.recipe_category_prefs.iter().map(|(cat, am)| (cat.clone(), am.name.clone())).collect(),
+            resource_category_prefs: us.resource_category_prefs.iter().map(|(cat, md)| (cat.clone(), md.name.clone())).collect()
+        }
     }
 }
 
 static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
-    log::info!("User settings init");
-    let mut recipe_category_prefs = HashMap::new();
-    for (recipe_category, mut assemblers) in GAME_DATA.recipe_categories_with_multiple_assemblers() {
-        assemblers.sort_by(|x, y| x.crafting_speed.partial_cmp(&y.crafting_speed).unwrap_or(Ordering::Equal));
-        log::info!("assembler for category {}: {}", recipe_category, assemblers[0].name);
-        recipe_category_prefs.insert(recipe_category, assemblers[0]);
-    }
-    let mut resource_category_prefs = HashMap::new();
-    for (resource_category, mut mining_drills) in GAME_DATA.resource_categories_with_multiple_mining_drills() {
-        mining_drills.sort_by(|x, y| x.mining_speed.partial_cmp(&y.mining_speed).unwrap_or(Ordering::Equal));
-        log::info!("mining drill for category {}: {}", resource_category, mining_drills[0].name);
-        resource_category_prefs.insert(resource_category, mining_drills[0]);
-    }
-    RwLock::new(UserSettings{recipe_category_prefs, resource_category_prefs})
+    let result = UserSettings::create();
+    RwLock::new(result)
 });
 
 #[derive(Debug, Clone, Routable, PartialEq)]
