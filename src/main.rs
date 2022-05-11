@@ -118,9 +118,9 @@ static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 enum Route {
-    #[at("*/settings")]
+    #[at("/settings")]
     Settings,
-    #[at("*/")]
+    #[at("/")]
     Home,
 }
 
