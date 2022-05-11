@@ -20,7 +20,7 @@ jobs:
         target: wasm32-unknown-unknown
     - uses: jetli/trunk-action@v0.1.0
     - name: Build
-      run: trunk build --public-url /factorio-web-calculator/
+      run: trunk build
     - name: Package
       shell: bash
       run: |
