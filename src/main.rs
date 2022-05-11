@@ -175,7 +175,13 @@ impl Component for UserSettingsPage {
                     </ul>
                 </div>
                 <div id="usersettings_miningdrill">
-                    <p> {"mining drills TODO"} </p>
+                    {
+                        for GAME_DATA.resource_categories_with_multiple_mining_drills().iter().map(|v| {
+                            html_nested! {
+                                <UserSettingResourceCategory category={v.0.clone()} choices={v.1.clone()} />
+                            }
+                        })
+                    }
                 </div>
             </div>
         }
@@ -217,6 +223,50 @@ impl Component for UserSettingRecipeCategory {
                                     })
                                 .unwrap_or(false)} />
                             <SpriteSheetIcon name={am.name.clone()} prefix="assembling-machine"/>
+                        </label>
+                    }
+                })
+            }
+            </li>
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct UserSettingResourceCategory;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct UserSettingResourceCategoryProperties {
+    category: String,
+    choices: Vec<&'static MiningDrill>
+}
+
+impl Component for UserSettingResourceCategory {
+    type Properties = UserSettingResourceCategoryProperties;
+    type Message = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let props = ctx.props();
+        html! {
+            <li>
+            <p> {props.category.clone()} </p>
+            {
+                for props.choices.iter().map(|md| {
+                    html_nested! {
+                        <label>
+                            <input type="radio" name={format!("resource-category-pref-{}", props.category)} checked={
+                                USER_SETTINGS
+                                    .read().ok().and_then(|us| {
+                                        us.resource_category_prefs
+                                            .get(&props.category)
+                                            .map(|mdp| mdp.name == md.name)
+                                    })
+                                .unwrap_or(false)} />
+                            <SpriteSheetIcon name={md.name.clone()} prefix="mining-drill"/>
                         </label>
                     }
                 })
