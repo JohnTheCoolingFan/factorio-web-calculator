@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, cmp::Ordering};
 use image::Rgba;
 use serde::{Deserialize, Serialize};
 
@@ -33,7 +33,9 @@ impl GameData {
         result
             .iter_mut()
             .map(|(_, am_vec)| am_vec
-                .sort_by_key(|am| &am.name)).for_each(drop);
+                .sort_by(|am1, am2| {
+                    am1.crafting_speed.partial_cmp(&am2.crafting_speed).unwrap_or(Ordering::Equal)
+                })).for_each(drop);
         result
     }
 
@@ -55,7 +57,9 @@ impl GameData {
         result
             .iter_mut()
             .map(|(_, md_vec)| md_vec
-                .sort_by_key(|md| &md.name)).for_each(drop);
+                .sort_by(|md1, md2| {
+                    md1.mining_speed.partial_cmp(&md2.mining_speed).unwrap_or(Ordering::Equal)
+                })).for_each(drop);
         result
     }
 }
