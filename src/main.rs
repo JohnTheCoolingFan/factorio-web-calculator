@@ -340,7 +340,7 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
-                <p> <a href="/settings">{"[WIP] Settings"}</a> </p>
+                <p> <a href="/factorio-web-calculator/settings">{"[WIP] Settings"}</a> </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
