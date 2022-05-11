@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "factorio-web-calculator"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "clap",
  "gloo-storage",
