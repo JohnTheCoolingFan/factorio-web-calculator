@@ -164,6 +164,7 @@ impl Component for UserSettingsPage {
             <div id="usersettings">
                 <p><a href="/">{"Go back"}</a></p>
                 <div id="usersettings_assemblingmachine">
+                    <p>{"Assembling machines and furnaces:"}</p>
                     <ul>
                     {
                         for GAME_DATA.recipe_categories_with_multiple_assemblers().iter().map(|v| {
@@ -175,6 +176,8 @@ impl Component for UserSettingsPage {
                     </ul>
                 </div>
                 <div id="usersettings_miningdrill">
+                    <p>{"Mining drills"}</p>
+                    <ul>
                     {
                         for GAME_DATA.resource_categories_with_multiple_mining_drills().iter().map(|v| {
                             html_nested! {
@@ -182,6 +185,7 @@ impl Component for UserSettingsPage {
                             }
                         })
                     }
+                    </ul>
                 </div>
             </div>
         }
