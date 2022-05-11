@@ -47,11 +47,13 @@ impl UserSettings {
     }
 
     fn change_recipe_category(&mut self, category: &str, machine: &'static AssemblingMachine) {
+        log::info!("Changed assembler for categpry {} to {}", category, machine.name);
         self.recipe_category_prefs.insert(category.to_string(), machine);
         self.write()
     }
 
     fn change_resource_category(&mut self, category: &str, machine: &'static MiningDrill) {
+        log::info!("Changed mining drill for category {} to {}", category, machine.name);
         self.resource_category_prefs.insert(category.to_string(), machine);
         self.write()
     }
@@ -127,7 +129,7 @@ enum Route {
 fn switch(route: &Route) -> Html {
     match route {
         Route::Home => html! { <Calculator /> },
-        Route::Settings => html!{ <p> {"settings page"} </p> }
+        Route::Settings => html!{ <UserSettingsPage /> }
     }
 }
 
@@ -137,6 +139,89 @@ fn app() -> Html {
         <BrowserRouter>
             <Switch<Route> render={Switch::render(switch)} />
         </BrowserRouter>
+    }
+}
+
+#[derive(Debug)]
+pub struct UserSettingsPage;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UserSettingsPageMessage {
+    ChangeAssembler(String, &'static AssemblingMachine),
+    ChangeMiningDrill(String, &'static MiningDrill)
+}
+
+impl Component for UserSettingsPage {
+    type Message = UserSettingsPageMessage;
+    type Properties = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, _ctx: &Context<Self>) -> Html {
+        html! {
+            <div id="usersettings">
+                <div id="usersettings_assemblingmachine">
+                    <ul>
+                    {
+                        for GAME_DATA.recipe_categories_with_multiple_assemblers().iter().map(|v| {
+                            html_nested! {
+                                <UserSettingRecipeCategory category={v.0.clone()} choices={v.1.clone()} />
+                            }
+                        })
+                    }
+                    </ul>
+                </div>
+                <div id="usersettings_miningdrill">
+                    <p> {"mining drills TODO"} </p>
+                </div>
+            </div>
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct UserSettingRecipeCategory;
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct UserSettingRecipeCategoryProperties {
+    category: String,
+    choices: Vec<&'static AssemblingMachine>
+}
+
+impl Component for UserSettingRecipeCategory {
+    type Properties = UserSettingRecipeCategoryProperties;
+    type Message = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let props = ctx.props();
+        html! {
+            <li>
+            <p> {props.category.clone()} </p>
+            {
+                for props.choices.iter().map(|am| {
+                    html_nested! {
+                        <label>
+                            <input type="radio" name={format!("recipe-category-pref-{}", props.category)} checked={
+                                USER_SETTINGS
+                                    .read().ok().and_then(|us| {
+                                        us.recipe_category_prefs
+                                            .get(&props.category)
+                                            .map(|amp| amp.name == am.name)
+                                    })
+                                .unwrap_or(false)} />
+                            <SpriteSheetIcon name={am.name.clone()} prefix="assembling-machine"/>
+                        </label>
+                    }
+                })
+            }
+            </li>
+        }
     }
 }
 
