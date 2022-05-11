@@ -160,7 +160,7 @@ impl Component for UserSettingsPage {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div id="usersettings">
-                <p><a href=".">{"Go back"}</a></p>
+                <p><Link<Route> to={Route::Home}>{"Go back"}</Link<Route>></p>
                 <div id="usersettings_assemblingmachine">
                     <p>{"Assembling machines and furnaces:"}</p>
                     <ul>
@@ -340,7 +340,7 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
-                <p> <a href="settings">{"[WIP] Settings"}</a> </p>
+                <p> <Link<Route> to={Route::Settings}>{"[WIP] Settings"}</Link<Route>> </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
