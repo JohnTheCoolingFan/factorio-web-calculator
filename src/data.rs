@@ -31,6 +31,10 @@ impl GameData {
         }
         result.retain(|_, v| v.len() > 1);
         result
+            .iter_mut()
+            .map(|(_, am_vec)| am_vec
+                .sort_by_key(|am| &am.name)).for_each(drop);
+        result
     }
 
     pub fn resource_categories_with_multiple_mining_drills(&self) -> HashMap<String, Vec<&MiningDrill>> {
@@ -48,6 +52,10 @@ impl GameData {
             }
         }
         result.retain(|_, v| v.len() > 1);
+        result
+            .iter_mut()
+            .map(|(_, md_vec)| md_vec
+                .sort_by_key(|md| &md.name)).for_each(drop);
         result
     }
 }
