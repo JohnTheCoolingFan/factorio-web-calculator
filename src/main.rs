@@ -162,6 +162,7 @@ impl Component for UserSettingsPage {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div id="usersettings">
+                <p><a href="/">{"Go back"}</a></p>
                 <div id="usersettings_assemblingmachine">
                     <ul>
                     {
@@ -287,6 +288,7 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
+                <p> <a href="/settings">{"Settings"}</a> </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
