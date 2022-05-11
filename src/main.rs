@@ -176,7 +176,7 @@ impl Component for UserSettingsPage {
                     </ul>
                 </div>
                 <div id="usersettings_miningdrill">
-                    <p>{"Mining drills"}</p>
+                    <p>{"Mining drills:"}</p>
                     <ul>
                     {
                         for GAME_DATA.resource_categories_with_multiple_mining_drills().iter().map(|v| {
