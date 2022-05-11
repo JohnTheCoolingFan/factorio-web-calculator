@@ -20,7 +20,7 @@ jobs:
         target: wasm32-unknown-unknown
     - uses: jetli/trunk-action@v0.1.0
     - name: Build
-      run: trunk build
+      run: trunk build --release
     - name: Package
       shell: bash
       run: |
