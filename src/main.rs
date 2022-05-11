@@ -160,7 +160,7 @@ impl Component for UserSettingsPage {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div id="usersettings">
-                <p><a href="/">{"Go back"}</a></p>
+                <p><a href="/factorio-web-calculator/">{"Go back"}</a></p>
                 <div id="usersettings_assemblingmachine">
                     <p>{"Assembling machines and furnaces:"}</p>
                     <ul>
