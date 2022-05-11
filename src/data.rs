@@ -24,7 +24,7 @@ impl GameData {
         for category in categories {
             let entry = result.entry(category.clone()).or_insert_with(Vec::new);
             for assembling_machine in self.assembling_machines.values() {
-                if assembling_machine.crafting_categories.len() > 1 && assembling_machine.crafting_categories.contains(&category) {
+                if assembling_machine.crafting_categories.contains(&category) {
                     entry.push(assembling_machine);
                 }
             }
@@ -46,12 +46,14 @@ impl GameData {
         for category in categories {
             let entry = result.entry(category.clone()).or_insert_with(Vec::new);
             for mining_drill in self.mining_drills.values() {
-                if mining_drill.resource_categories.len() > 1 && mining_drill.resource_categories.contains(&category) {
+                if mining_drill.resource_categories.contains(&category) {
                     entry.push(mining_drill);
                 }
             }
         }
-        result.retain(|_, v| v.len() > 1);
+        result.retain(|cat, v| {
+            v.len() > 1
+        });
         result
             .iter_mut()
             .map(|(_, md_vec)| md_vec
