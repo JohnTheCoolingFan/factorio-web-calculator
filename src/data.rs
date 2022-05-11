@@ -51,9 +51,7 @@ impl GameData {
                 }
             }
         }
-        result.retain(|cat, v| {
-            v.len() > 1
-        });
+        result.retain(|_, v| v.len() > 1);
         result
             .iter_mut()
             .map(|(_, md_vec)| md_vec
