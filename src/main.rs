@@ -118,10 +118,10 @@ static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 enum Route {
-    #[at("/factorio-web-calculator/")]
+    #[at("*/settings")]
+    Settings,
+    #[at("*/")]
     Home,
-    #[at("/factorio-web-calculator/settings")]
-    Settings
 }
 
 fn switch(route: &Route) -> Html {
@@ -160,7 +160,7 @@ impl Component for UserSettingsPage {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div id="usersettings">
-                <p><a href="/factorio-web-calculator/">{"Go back"}</a></p>
+                <p><a href=".">{"Go back"}</a></p>
                 <div id="usersettings_assemblingmachine">
                     <p>{"Assembling machines and furnaces:"}</p>
                     <ul>
@@ -340,7 +340,7 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
-                <p> <a href="/factorio-web-calculator/settings">{"[WIP] Settings"}</a> </p>
+                <p> <a href="settings">{"[WIP] Settings"}</a> </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
