@@ -20,6 +20,7 @@ const SPRITESHEET_SIZE: usize = ORIGINAL_SPRITESHEET_SIZE / DOWNSCALE;
 const ICON_SIZE: usize = ORIGINAL_ICON_SIZE / DOWNSCALE;
 const RECURSION_LIMIT: usize = 5000;
 const VERY_SMALL: f64 = 1e-10;
+const RECIPE_BLACKLIST: &[&str] = &["coal-liquefaction", "kovarex-enrichment-process", "nuclear-fuel-reprocessing"]; // allow_decomposition = false
 
 static ICON_MAP: Lazy<HashMap<String, (usize, usize)>> = Lazy::new(|| {
     let json_mapping = include_bytes!("../assets/generated/spritesheet-mapping.json");
@@ -607,7 +608,8 @@ impl<'a> Factory<'a> {
 
     fn find_recipe_for_item(item: &str) -> Option<&'static Recipe> {
         for recipe in GAME_DATA.recipes.values() {
-            if recipe.produces().iter().any(|(x, _)| x == item) && recipe.allow_decomposition() {
+            if recipe.produces().iter().any(|(x, _)| x == item) && recipe.allow_decomposition() && !RECIPE_BLACKLIST.contains(&&*recipe.name) {
+                log::info!("Found recipe {}", recipe.name);
                 return Some(recipe)
             }
         }
