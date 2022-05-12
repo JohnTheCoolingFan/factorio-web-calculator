@@ -3,7 +3,7 @@ mod data;
 use data::*;
 use gloo_storage::Storage;
 use thiserror::Error;
-use std::{collections::HashMap, sync::RwLock, cmp::Ordering};
+use std::{collections::HashMap, sync::RwLock};
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, HtmlInputElement};
 use yew::{virtual_dom::VChild, events::Event, html::ChildrenRenderer, prelude::*};
