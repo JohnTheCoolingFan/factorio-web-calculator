@@ -33,8 +33,9 @@ impl GameData {
         result
             .iter_mut()
             .map(|(_, am_vec)| am_vec
-                .sort_by(|am1, am2| {
-                    am1.crafting_speed.partial_cmp(&am2.crafting_speed).unwrap_or(Ordering::Equal)
+                .sort_unstable_by(|am1, am2| {
+                    am1.crafting_speed.partial_cmp(&am2.crafting_speed)
+                        .unwrap_or_else(|| am1.name.cmp(&am2.name))
                 })).for_each(drop);
         result
     }
@@ -57,8 +58,9 @@ impl GameData {
         result
             .iter_mut()
             .map(|(_, md_vec)| md_vec
-                .sort_by(|md1, md2| {
-                    md1.mining_speed.partial_cmp(&md2.mining_speed).unwrap_or(Ordering::Equal)
+                .sort_unstable_by(|md1, md2| {
+                    md1.mining_speed.partial_cmp(&md2.mining_speed)
+                        .unwrap_or_else(|| md1.name.cmp(&md2.name))
                 })).for_each(drop);
         result
     }
