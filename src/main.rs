@@ -158,7 +158,17 @@ impl Component for UserSettingsPage {
         Self
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        log::info!("update callback");
+        let mut user_settings = USER_SETTINGS.write().unwrap();
+        match msg {
+            UserSettingsPageMessage::ChangeAssembler(recipe_category, assembling_machine) => user_settings.change_recipe_category(&recipe_category, assembling_machine),
+            UserSettingsPageMessage::ChangeMiningDrill(resource_category, mining_drill) => user_settings.change_resource_category(&resource_category, mining_drill),
+        };
+        false
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
             <div id="usersettings">
                 <p><Link<Route> to={Route::Home}>{"Go back"}</Link<Route>></p>
@@ -168,7 +178,7 @@ impl Component for UserSettingsPage {
                     {
                         for GAME_DATA.recipe_categories_with_multiple_assemblers().iter().map(|v| {
                             html_nested! {
-                                <UserSettingRecipeCategory category={v.0.clone()} choices={v.1.clone()} />
+                                <UserSettingRecipeCategory category={v.0.clone()} callback={ctx.link().callback(|m| m)} choices={v.1.clone()} />
                             }
                         })
                     }
@@ -180,7 +190,7 @@ impl Component for UserSettingsPage {
                     {
                         for GAME_DATA.resource_categories_with_multiple_mining_drills().iter().map(|v| {
                             html_nested! {
-                                <UserSettingResourceCategory category={v.0.clone()} choices={v.1.clone()} />
+                                <UserSettingResourceCategory category={v.0.clone()} callback={ctx.link().callback(|m| m)} choices={v.1.clone()} />
                             }
                         })
                     }
@@ -197,19 +207,32 @@ pub struct UserSettingRecipeCategory;
 #[derive(Debug, Clone, PartialEq, Properties)]
 pub struct UserSettingRecipeCategoryProperties {
     category: String,
-    choices: Vec<&'static AssemblingMachine>
+    choices: Vec<&'static AssemblingMachine>,
+    callback: Callback<UserSettingsPageMessage>,
 }
 
 impl Component for UserSettingRecipeCategory {
     type Properties = UserSettingRecipeCategoryProperties;
-    type Message = ();
+    type Message = &'static AssemblingMachine;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
 
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let props = ctx.props();
+        props.callback.emit(UserSettingsPageMessage::ChangeAssembler(props.category.clone(), msg));
+        false
+    }
+
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
+        let on_selected = ctx.link().batch_callback(|e: Event| {
+            log::info!("change");
+            let target: Option<EventTarget> = e.target();
+            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+            input.and_then(|i| GAME_DATA.assembling_machines.get(&i.value()))
+        });
         html! {
             <li>
             <p> {props.category.clone()} </p>
@@ -224,7 +247,7 @@ impl Component for UserSettingRecipeCategory {
                                             .get(&props.category)
                                             .map(|amp| amp.name == am.name)
                                     })
-                                .unwrap_or(false)} />
+                                .unwrap_or(false)} onchange={on_selected.clone()} value={am.name.clone()}/>
                             <SpriteSheetIcon name={am.name.clone()} prefix="assembling-machine"/>
                         </label>
                     }
@@ -241,19 +264,31 @@ pub struct UserSettingResourceCategory;
 #[derive(Debug, Clone, PartialEq, Properties)]
 pub struct UserSettingResourceCategoryProperties {
     category: String,
-    choices: Vec<&'static MiningDrill>
+    choices: Vec<&'static MiningDrill>,
+    callback: Callback<UserSettingsPageMessage>,
 }
 
 impl Component for UserSettingResourceCategory {
     type Properties = UserSettingResourceCategoryProperties;
-    type Message = ();
+    type Message = &'static MiningDrill;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self
     }
 
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let props = ctx.props();
+        props.callback.emit(UserSettingsPageMessage::ChangeMiningDrill(props.category.clone(), msg));
+        false
+    }
+
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
+        let on_selected = ctx.link().batch_callback(|e: Event| {
+            let target: Option<EventTarget> = e.target();
+            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+            input.and_then(|i| GAME_DATA.mining_drills.get(&i.value()))
+        });
         html! {
             <li>
             <p> {props.category.clone()} </p>
@@ -268,7 +303,7 @@ impl Component for UserSettingResourceCategory {
                                             .get(&props.category)
                                             .map(|mdp| mdp.name == md.name)
                                     })
-                                .unwrap_or(false)} />
+                                .unwrap_or(false)} onchange={on_selected.clone()} value={md.name.clone()}/>
                             <SpriteSheetIcon name={md.name.clone()} prefix="mining-drill"/>
                         </label>
                     }
