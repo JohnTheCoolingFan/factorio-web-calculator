@@ -158,7 +158,7 @@ impl Component for UserSettingsPage {
         Self
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         log::info!("update callback");
         let mut user_settings = USER_SETTINGS.write().unwrap();
         match msg {
