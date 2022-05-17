@@ -310,7 +310,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('factorio-web-calculator-ce5b71327dc7308f_bg.wasm', import.meta.url);
+        input = new URL('factorio-web-calculator-874b21e8fb596845_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
