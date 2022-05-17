@@ -374,6 +374,7 @@ impl Component for Calculator {
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
+                <p> { format!("Version: {}", env!("CARGO_PKG_VERSION")) } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
                 <p> <Link<Route> to={Route::Settings}>{"Settings"}</Link<Route>> </p>
