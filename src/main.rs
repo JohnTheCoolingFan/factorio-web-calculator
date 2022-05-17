@@ -376,7 +376,7 @@ impl Component for Calculator {
                 <p> { "This is a calculator" } </p>
                 <p> { "Source code is available at " } <a href={"https://github.com/JohnTheCoolingFan/factorio-web-calculator"}>{"GitHub repo"}</a> </p>
                 <p> { "Please report any issues you encounter" } </p>
-                <p> <Link<Route> to={Route::Settings}>{"[WIP] Settings"}</Link<Route>> </p>
+                <p> <Link<Route> to={Route::Settings}>{"Settings"}</Link<Route>> </p>
                 <p> { "Current targets:" } </p>
                 <InputList>
                 { for targets.iter().enumerate().map(|(i, t)| { 
