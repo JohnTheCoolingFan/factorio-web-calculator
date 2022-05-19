@@ -868,7 +868,8 @@ impl Component for InputItem {
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                <button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
+                //<button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
+                <ItemSelectDropdown selected_item={props.item.clone()} callback={link.callback(InputItemMessage::ItemSelected)} />
                 // Input factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} value={props.rate.as_factories(ips).to_string()} />
@@ -879,6 +880,82 @@ impl Component for InputItem {
                 {"item: "}
                 <input type="text" onchange={on_item_selected} value={props.item.clone()}/>
             </li>
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ItemSelectDropdown {
+    is_open: bool
+}
+
+#[derive(Debug, Clone, PartialEq, Properties)]
+pub struct ItemSelectDropdownProperties {
+    callback: Callback<String>,
+    #[prop_or_else(default_item)]
+    selected_item: String
+}
+
+fn default_item() -> String {
+    DEFAULT_ITEM.into()
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ItemSelectDropdownMessage {
+    OpenDropdown,
+    CloseDropdown,
+    ItemSelected(String)
+}
+
+impl Component for ItemSelectDropdown {
+    type Properties = ItemSelectDropdownProperties;
+    type Message = ItemSelectDropdownMessage;
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self {is_open: false}
+    }
+
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let props = ctx.props();
+        match msg {
+            ItemSelectDropdownMessage::OpenDropdown => self.is_open = true,
+            ItemSelectDropdownMessage::CloseDropdown => self.is_open = false,
+            ItemSelectDropdownMessage::ItemSelected(item) => props.callback.emit(item)
+        };
+        true
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
+        let props = ctx.props();
+
+        let on_item_selected = link.batch_callback(|e: Event| {
+            let target: Option<EventTarget> = e.target();
+            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+            input.map(|i| ItemSelectDropdownMessage::ItemSelected(i.value()))
+        });
+
+        let mut wrapper_classes = classes!("dropdown-wrapper");
+        if self.is_open {
+            wrapper_classes.push("open")
+        }
+
+        html! {
+            <div class={wrapper_classes}>
+                <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
+                <div class="item-select-dropdown">
+                    {
+                        for GAME_DATA.items.iter().map(|(_, item)| {
+                            html_nested! {
+                                <label>
+                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} checked={ item.name == props.selected_item }/>
+                                    <ItemIcon  item={item.name.clone()}/>
+                                </label>
+                            }
+                        })
+                    }
+                </div>
+            </div>
         }
     }
 }
