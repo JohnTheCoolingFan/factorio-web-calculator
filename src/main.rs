@@ -923,7 +923,7 @@ impl Component for ItemSelectDropdown {
                 props.callback.emit(item)
             }
         };
-        true
+        true // Maybe don't re-render when selected?
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
