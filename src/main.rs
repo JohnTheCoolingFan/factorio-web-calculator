@@ -920,7 +920,10 @@ impl Component for ItemSelectDropdown {
         match msg {
             ItemSelectDropdownMessage::OpenDropdown => self.is_open = true,
             ItemSelectDropdownMessage::CloseDropdown => self.is_open = false,
-            ItemSelectDropdownMessage::ItemSelected(item) => props.callback.emit(item)
+            ItemSelectDropdownMessage::ItemSelected(item) => {
+                self.is_open = false;
+                props.callback.emit(item)
+            }
         };
         true
     }
