@@ -1,0 +1,11 @@
+.dropdown-wrapper {
+  .item-select-dropdown {
+    height: 400px;
+    width: 380px;
+    overflow-y: scroll;
+
+    input[type="radio"] {
+      display: none
+    }
+  }
+}
