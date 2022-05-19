@@ -957,7 +957,9 @@ impl Component for ItemSelectDropdown {
                                         {for subgroup.iter().map(|item| {
                                             html_nested! {
                                                 <label>
-                                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} />
+                                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} name="item-select" checked={
+                                                        item.name == props.selected_item
+                                                    }/>
                                                     <ItemIcon item={item.name.clone()} />
                                                 </label>
                                             }
