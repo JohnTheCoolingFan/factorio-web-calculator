@@ -1,11 +1,23 @@
-.dropdown-wrapper {
+.dropdown-wrapper.open {
   .item-select-dropdown {
     height: 400px;
     width: 380px;
     overflow-y: scroll;
+    z-index: 10;
 
     input[type="radio"] {
       display: none
     }
+  }
+
+  .clicker {
+    display: block;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    top: 0px;
+    left: 0px;
+    cursor: default;
   }
 }
