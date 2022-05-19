@@ -1,3 +1,21 @@
+.dropdown-wrapper {
+  .item-select-dropdown {
+    overflow: hidden;
+
+    label {
+      display: none;
+    }
+
+    hr {
+      display: none;
+    }
+
+    br {
+      display: none;
+    }
+  }
+}
+
 .dropdown-wrapper.open {
   .item-select-dropdown {
     height: 400px;
