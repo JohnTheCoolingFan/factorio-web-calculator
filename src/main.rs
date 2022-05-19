@@ -948,12 +948,26 @@ impl Component for ItemSelectDropdown {
                 <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
                 <div class="item-select-dropdown">
                     {
-                        for GAME_DATA.items.iter().map(|(_, item)| {
+                        for GAME_DATA.items_in_groups().iter().map(|(_group_name, group)| {
                             html_nested! {
-                                <label>
-                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} checked={ item.name == props.selected_item }/>
-                                    <ItemIcon  item={item.name.clone()}/>
-                                </label>
+                                <>
+                                {for group.iter().map(|(_subgroup_name, subgroup)| {
+                                    html_nested!{
+                                        <>
+                                        {for subgroup.iter().map(|item| {
+                                            html_nested! {
+                                                <label>
+                                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} />
+                                                    <ItemIcon item={item.name.clone()} />
+                                                </label>
+                                            }
+                                        })}
+                                        <br/>
+                                        </>
+                                    }
+                                })}
+                                <hr/>
+                                </>
                             }
                         })
                     }

@@ -15,6 +15,30 @@ pub struct GameData {
 }
 
 impl GameData {
+    pub fn items_in_groups(&self) -> HashMap<String, HashMap<String, Vec<&Item>>> {
+        let mut result = HashMap::new();
+        for item_group in self.item_groups.values() {
+            let mut group_result = HashMap::new();
+            for item_subgroup in self.item_subgroups.values() {
+                if item_subgroup.group == item_group.name {
+                    let mut subgroup_result = Vec::new();
+                    for item in self.items.values() {
+                        if item.subgroup == item_subgroup.name {
+                            subgroup_result.push(item)
+                        }
+                    }
+                    if !subgroup_result.is_empty() {
+                        group_result.insert(item_subgroup.name.clone(), subgroup_result);
+                    }
+                }
+            }
+            if !group_result.is_empty() {
+                result.insert(item_group.name.clone(), group_result);
+            }
+        }
+        result
+    }
+
     pub fn recipe_categories_with_multiple_assemblers(&self) -> HashMap<String, Vec<&AssemblingMachine>> {
         let mut categories: HashSet<String> = HashSet::new();
         let mut result = HashMap::new();
