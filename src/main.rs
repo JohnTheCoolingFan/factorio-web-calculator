@@ -801,7 +801,6 @@ struct InputItemProps {
 #[derive(Debug, Clone)]
 enum InputItemMessage {
     Remove,
-    OpenItem,
     ItemSelected(String),
     Factories(f64),
     ItemsPerSecond(f64)
@@ -831,7 +830,6 @@ impl Component for InputItem {
             InputItemMessage::Remove => {
                 callback.emit(CalculatorMessage::RemoveItem(props.index))
             }
-            _ => {}
         }
         true
     }
