@@ -14,11 +14,13 @@ pub struct GameData {
     pub resources: HashMap<String, Resource>
 }
 
+type VecMap<T> = Vec<(String, T)>;
+
 impl GameData {
-    pub fn items_in_groups(&self) -> HashMap<String, HashMap<String, Vec<&Item>>> {
-        let mut result = HashMap::new();
+    pub fn items_in_groups(&self) -> VecMap<VecMap<Vec<&Item>>> {
+        let mut result = Vec::new();
         for item_group in self.item_groups.values() {
-            let mut group_result = HashMap::new();
+            let mut group_result = Vec::new();
             for item_subgroup in self.item_subgroups.values() {
                 if item_subgroup.group == item_group.name {
                     let mut subgroup_result = Vec::new();
@@ -28,14 +30,17 @@ impl GameData {
                         }
                     }
                     if !subgroup_result.is_empty() {
-                        group_result.insert(item_subgroup.name.clone(), subgroup_result);
+                        subgroup_result.sort_by(|item1, item2| item1.name.cmp(&item2.name));
+                        group_result.push((item_subgroup.name.clone(), subgroup_result));
                     }
                 }
             }
             if !group_result.is_empty() {
-                result.insert(item_group.name.clone(), group_result);
+                group_result.sort_by(|(sgn1, _), (sgn2, _)| sgn1.cmp(sgn2));
+                result.push((item_group.name.clone(), group_result));
             }
         }
+        result.sort_by(|(gn1, _), (gn2, _)| gn1.cmp(gn2));
         result
     }
 
