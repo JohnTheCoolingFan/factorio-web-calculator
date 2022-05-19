@@ -944,7 +944,7 @@ impl Component for ItemSelectDropdown {
         html! {
             <div class={wrapper_classes}>
                 <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
-                <div class="item-select-dropdown">
+                <div class="item-select-dropdown" onclick={link.callback(|_| ItemSelectDropdownMessage::OpenDropdown)}>
                     {
                         for GAME_DATA.items_in_groups().iter().map(|(_group_name, group)| {
                             html_nested! {
