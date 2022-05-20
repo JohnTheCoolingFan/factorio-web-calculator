@@ -6,6 +6,14 @@
       display: none;
     }
 
+    input {
+      display: none;
+    }
+
+    input[type="radio"]:checked + label {
+      display: inline-block;
+    }
+
     hr {
       display: none;
     }
@@ -14,6 +22,12 @@
       display: none;
     }
   }
+
+  .spacer {
+    width: 0px;
+    height: 0px;
+  }
+
 }
 
 .dropdown-wrapper.open {
@@ -22,9 +36,15 @@
     width: 380px;
     overflow-y: scroll;
     z-index: 10;
+    position: absolute;
+    background: grey;
 
     input[type="radio"] {
-      display: none
+      display: none;
+    }
+
+    label {
+      display: inline-block;
     }
   }
 
@@ -38,4 +58,10 @@
     left: 0px;
     cursor: default;
   }
+
+  .spacer {
+    width: 32px;
+    height: 32px;
+  }
+
 }

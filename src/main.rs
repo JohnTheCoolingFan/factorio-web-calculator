@@ -867,7 +867,7 @@ impl Component for InputItem {
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
                 //<button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
-                <ItemSelectDropdown selected_item={props.item.clone()} callback={link.callback(InputItemMessage::ItemSelected)} />
+                <ItemSelectDropdown index={props.index} selected_item={props.item.clone()} callback={link.callback(InputItemMessage::ItemSelected)} />
                 // Input factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} value={props.rate.as_factories(ips).to_string()} />
@@ -890,6 +890,7 @@ pub struct ItemSelectDropdown {
 #[derive(Debug, Clone, PartialEq, Properties)]
 pub struct ItemSelectDropdownProperties {
     callback: Callback<String>,
+    index: usize,
     #[prop_or_else(default_item)]
     selected_item: String
 }
@@ -902,6 +903,7 @@ fn default_item() -> String {
 pub enum ItemSelectDropdownMessage {
     OpenDropdown,
     CloseDropdown,
+    ToggleDropdown,
     ItemSelected(String)
 }
 
@@ -918,6 +920,7 @@ impl Component for ItemSelectDropdown {
         match msg {
             ItemSelectDropdownMessage::OpenDropdown => self.is_open = true,
             ItemSelectDropdownMessage::CloseDropdown => self.is_open = false,
+            ItemSelectDropdownMessage::ToggleDropdown => self.is_open = !self.is_open,
             ItemSelectDropdownMessage::ItemSelected(item) => {
                 self.is_open = false;
                 props.callback.emit(item)
@@ -944,22 +947,29 @@ impl Component for ItemSelectDropdown {
         html! {
             <div class={wrapper_classes}>
                 <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
+                <div class="spacer"></div>
                 <div class="item-select-dropdown" onclick={link.callback(|_| ItemSelectDropdownMessage::OpenDropdown)}>
                     {
-                        for GAME_DATA.items_in_groups().iter().map(|(_group_name, group)| {
+                        for GAME_DATA.items_in_groups().iter().enumerate().map(|(i_1, (_group_name, group))| {
                             html_nested! {
                                 <>
-                                {for group.iter().map(|(_subgroup_name, subgroup)| {
+                                {for group.iter().enumerate().map(|(i_2, (_subgroup_name, subgroup))| {
                                     html_nested!{
                                         <>
-                                        {for subgroup.iter().map(|item| {
+                                        {for subgroup.iter().enumerate().map(|(i_3, item)| {
+                                            let input_id = format!("input-{}-{}-{}-{}", props.index, i_1, i_2, i_3);
                                             html_nested! {
-                                                <label>
-                                                    <input type="radio" value={item.name.clone()} onchange={on_item_selected.clone()} name="item-select" checked={
-                                                        item.name == props.selected_item
-                                                    }/>
-                                                    <ItemIcon item={item.name.clone()} />
-                                                </label>
+                                                <>
+                                                <input 
+                                                    type="radio"
+                                                    value={item.name.clone()}
+                                                    onchange={on_item_selected.clone()}
+                                                    name={format!("item-select-{}", props.index)} 
+                                                    checked={ item.name == props.selected_item }
+                                                    id={input_id.clone()}
+                                                />
+                                                <label for={input_id}> <ItemIcon item={item.name.clone()} /> </label>
+                                                </>
                                             }
                                         })}
                                         <br/>
