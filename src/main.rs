@@ -948,6 +948,7 @@ impl Component for ItemSelectDropdown {
             <div class={wrapper_classes}>
                 <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
                 <div class="spacer"></div>
+                // FIXME: sends 2 messages to open dropdown instead of selecting a label
                 <div class="item-select-dropdown" onclick={link.callback(|_| ItemSelectDropdownMessage::OpenDropdown)}>
                     {
                         for GAME_DATA.items_in_groups().iter().enumerate().map(|(i_1, (_group_name, group))| {
