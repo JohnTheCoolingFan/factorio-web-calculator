@@ -3,7 +3,6 @@
     overflow: hidden;
     display: inline-block;
     cursor: pointer;
-    -moz-user-select: none;
 
     input[type="radio"] + label {
       display: none;
@@ -48,7 +47,7 @@
     cursor: default;
 
     input[type="radio"] {
-      display: none;
+      display: inline-block;
     }
 
     input[type="radio"] + label {

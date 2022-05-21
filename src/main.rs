@@ -884,7 +884,8 @@ impl Component for InputItem {
 
 #[derive(Debug)]
 pub struct ItemSelectDropdown {
-    is_open: bool
+    is_open: bool,
+    selected_item: String
 }
 
 #[derive(Debug, Clone, PartialEq, Properties)]
@@ -911,8 +912,12 @@ impl Component for ItemSelectDropdown {
     type Properties = ItemSelectDropdownProperties;
     type Message = ItemSelectDropdownMessage;
 
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self {is_open: false}
+    fn create(ctx: &Context<Self>) -> Self {
+        let props = ctx.props();
+        Self {
+            is_open: false,
+            selected_item: props.selected_item.clone()
+        }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -922,6 +927,7 @@ impl Component for ItemSelectDropdown {
             ItemSelectDropdownMessage::CloseDropdown => self.is_open = false,
             ItemSelectDropdownMessage::ToggleDropdown => self.is_open = !self.is_open,
             ItemSelectDropdownMessage::ItemSelected(item) => {
+                self.selected_item = item.clone();
                 self.is_open = false;
                 props.callback.emit(item)
             }
@@ -934,6 +940,7 @@ impl Component for ItemSelectDropdown {
         let props = ctx.props();
 
         let on_item_selected = link.batch_callback(|e: Event| {
+            log::info!("item selected");
             let target: Option<EventTarget> = e.target();
             let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
             input.map(|i| ItemSelectDropdownMessage::ItemSelected(i.value()))
@@ -960,17 +967,17 @@ impl Component for ItemSelectDropdown {
                                         {for subgroup.iter().enumerate().map(|(i_3, item)| {
                                             let input_id = format!("input-{}-{}-{}-{}", props.index, i_1, i_2, i_3);
                                             html_nested! {
-                                                <>
+                                                <span>
                                                 <input 
                                                     type="radio"
                                                     value={item.name.clone()}
                                                     onchange={on_item_selected.clone()}
                                                     name={format!("item-select-{}", props.index)} 
-                                                    checked={ item.name == props.selected_item }
+                                                    checked={ item.name == self.selected_item }
                                                     id={input_id.clone()}
                                                 />
                                                 <label for={input_id}> <ItemIcon item={item.name.clone()} /> </label>
-                                                </>
+                                                </span>
                                             }
                                         })}
                                         <br/>
