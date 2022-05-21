@@ -923,7 +923,10 @@ impl Component for ItemSelectDropdown {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let props = ctx.props();
         match msg {
-            ItemSelectDropdownMessage::OpenDropdown => self.is_open = true,
+            ItemSelectDropdownMessage::OpenDropdown => {
+                if self.is_open { return false }
+                self.is_open = true
+            },
             ItemSelectDropdownMessage::CloseDropdown => self.is_open = false,
             ItemSelectDropdownMessage::ToggleDropdown => self.is_open = !self.is_open,
             ItemSelectDropdownMessage::ItemSelected(item) => {
