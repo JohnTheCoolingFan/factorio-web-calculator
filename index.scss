@@ -29,6 +29,7 @@
   .spacer {
     width: 0px;
     height: 0px;
+    display: inline-block;
   }
 
   .clicker {
@@ -53,6 +54,16 @@
     input[type="radio"] + label {
       display: inline-block;
       pointer-events: auto;
+      width: 32px;
+      height: 32px;
+      border: 2px solid orange;
+      border-radius: 5px;
+      margin: 2px;
+      padding: 2px;
+    }
+
+    input[type="radio"] + label:hover {
+      background: white;
     }
 
     br {

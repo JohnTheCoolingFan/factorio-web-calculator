@@ -875,8 +875,8 @@ impl Component for InputItem {
                 {"items/s: "}
                 <input type="text" onchange={on_ips_change} value={props.rate.as_ips(ips).to_string()}/>
                 // Input item manually
-                {"item: "}
-                <input type="text" onchange={on_item_selected} value={props.item.clone()}/>
+                //{"item: "}
+                //<input type="text" onchange={on_item_selected} value={props.item.clone()}/>
             </li>
         }
     }
@@ -957,7 +957,6 @@ impl Component for ItemSelectDropdown {
         html! {
             <div class={wrapper_classes}>
                 <div class="clicker" onclick={ link.callback(|_| ItemSelectDropdownMessage::CloseDropdown) }></div>
-                <div class="spacer"></div>
                 // FIXME: sends 2 messages to open dropdown instead of selecting a label
                 <div class="item-select-dropdown" onclick={link.callback(|_| ItemSelectDropdownMessage::OpenDropdown)}>
                     {
@@ -993,6 +992,7 @@ impl Component for ItemSelectDropdown {
                         })
                     }
                 </div>
+                <div class="spacer"></div>
             </div>
         }
     }
