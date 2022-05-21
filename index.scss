@@ -1,8 +1,11 @@
 .dropdown-wrapper {
   .item-select-dropdown {
     overflow: hidden;
+    display: inline-block;
+    cursor: pointer;
+    -moz-user-select: none;
 
-    label {
+    input[type="radio"] + label {
       display: none;
     }
 
@@ -12,6 +15,7 @@
 
     input[type="radio"]:checked + label {
       display: inline-block;
+      pointer-events: none;
     }
 
     hr {
@@ -41,13 +45,23 @@
     z-index: 10;
     position: absolute;
     background: grey;
+    cursor: default;
 
     input[type="radio"] {
       display: none;
     }
 
-    label {
+    input[type="radio"] + label {
       display: inline-block;
+      pointer-events: auto;
+    }
+
+    br {
+      display: inline;
+    }
+
+    hr {
+      display: block;
     }
   }
 
