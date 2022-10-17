@@ -1,7 +1,7 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::{HashMap, HashSet}, iter::Iterator, path::{PathBuf, Path}, fs::File, io::{BufWriter, Write}};
-use serde_json::{Value, from_reader, to_writer, from_value, json};
+use std::{collections::{HashMap, HashSet}, iter::Iterator, path::{PathBuf, Path}, fs::File};
+use serde_json::{Value, from_reader, to_writer, from_value};
 use clap::Parser;
 use image::{RgbaImage, ImageBuffer, io::Reader, Rgba, Pixel, GenericImageView, imageops::overlay, ImageFormat};
 
@@ -17,9 +17,6 @@ struct CliParameters {
     /// Input file to read data from
     #[clap(short, long, parse(from_os_str), value_name = "IN")]
     input_file: PathBuf,
-    /// Use expensive recipes instead of normal
-    #[clap(short, long)]
-    expensive: bool
 }
 
 struct PathResolver {
@@ -87,8 +84,6 @@ fn main() {
     // Init //
     let params = CliParameters::parse();
 
-    let difficulty = params.expensive.then(|| "expensive").unwrap_or("normal");
-    
     if !params.factorio_dir.exists() {
         panic!("{} does not exist", params.factorio_dir.to_str().unwrap());
     }
@@ -106,7 +101,7 @@ fn main() {
     let in_file = File::open(params.input_file).unwrap();
     let json_data: Value = from_reader(in_file).unwrap();
 
-    let game_data = get_data(difficulty, &json_data);
+    let game_data = get_data(&json_data);
     println!("Done parsing data, writing to {}", out_file_path.to_str().unwrap());
 
     let out_file = File::create(out_file_path).unwrap();
@@ -233,7 +228,7 @@ fn tint_pixel(pixel: &mut Rgba<u8>, tint: &TintColor) {
     channels_a[3] = ((channels_a[3] as f64 * (tint.a * 255.0)) / 255.0) as u8;
 }
 
-fn get_data(difficulty: &str, json_data: &Value) -> GameData {
+fn get_data(json_data: &Value) -> GameData {
 
     println!("Processing items");
     let items: HashMap<String, Item> = json_data["item"]

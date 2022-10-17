@@ -852,13 +852,6 @@ impl Component for InputItem {
             input.and_then(|i| Some(InputItemMessage::ItemsPerSecond(i.value().parse().ok()?)))
         });
 
-        let on_item_selected = link.batch_callback(|e: Event| {
-            let target: Option<EventTarget> = e.target();
-
-            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
-            input.and_then(|i| Some(InputItemMessage::ItemSelected(i.value().parse().ok()?)))
-        });
-
         let ips = Factory::ips_for_item(&props.item);
 
         html! {
@@ -900,7 +893,7 @@ fn default_item() -> String {
     DEFAULT_ITEM.into()
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemSelectDropdownMessage {
     OpenDropdown,
     CloseDropdown,
@@ -1001,7 +994,7 @@ impl Component for ItemSelectDropdown {
 #[derive(Debug)]
 pub struct SpriteSheetIcon;
 
-#[derive(Debug, Clone, PartialEq, Properties)]
+#[derive(Debug, Clone, PartialEq, Eq, Properties)]
 pub struct SpriteSheetIconProperties {
     prefix: String,
     name: String
@@ -1030,7 +1023,7 @@ impl Component for SpriteSheetIcon {
 #[derive(Debug, Clone)]
 pub struct ItemIcon;
 
-#[derive(Debug, Clone, PartialEq, Properties)]
+#[derive(Debug, Clone, PartialEq, Eq, Properties)]
 pub struct ItemIconProperties {
     item: String
 }

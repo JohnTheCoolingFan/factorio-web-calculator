@@ -386,12 +386,12 @@ pub struct OffshorePump {
     pub pumping_speed: f64
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModuleSpec {
     pub module_slots: usize
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Module {
     pub icon: String,
     pub name: String,
@@ -410,7 +410,7 @@ pub enum EffectType {
     Productivity
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Effect {
     pub bonus: f64
 }
