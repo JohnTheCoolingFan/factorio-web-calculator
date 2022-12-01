@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
 use image::Rgba;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct GameData {
@@ -11,7 +11,7 @@ pub struct GameData {
     pub item_subgroups: HashMap<String, ItemSubGroup>,
     pub mining_drills: HashMap<String, MiningDrill>,
     pub offshore_pumps: HashMap<String, OffshorePump>,
-    pub resources: HashMap<String, Resource>
+    pub resources: HashMap<String, Resource>,
 }
 
 type VecMap<T> = Vec<(String, T)>;
@@ -44,7 +44,9 @@ impl GameData {
         result
     }
 
-    pub fn recipe_categories_with_multiple_assemblers(&self) -> HashMap<String, Vec<&AssemblingMachine>> {
+    pub fn recipe_categories_with_multiple_assemblers(
+        &self,
+    ) -> HashMap<String, Vec<&AssemblingMachine>> {
         let mut categories: HashSet<String> = HashSet::new();
         let mut result = HashMap::new();
         for recipe in self.recipes.values() {
@@ -61,15 +63,20 @@ impl GameData {
         result.retain(|_, v| v.len() > 1);
         result
             .iter_mut()
-            .map(|(_, am_vec)| am_vec
-                .sort_unstable_by(|am1, am2| {
-                    am1.crafting_speed.partial_cmp(&am2.crafting_speed)
+            .map(|(_, am_vec)| {
+                am_vec.sort_unstable_by(|am1, am2| {
+                    am1.crafting_speed
+                        .partial_cmp(&am2.crafting_speed)
                         .unwrap_or_else(|| am1.name.cmp(&am2.name))
-                })).for_each(drop);
+                })
+            })
+            .for_each(drop);
         result
     }
 
-    pub fn resource_categories_with_multiple_mining_drills(&self) -> HashMap<String, Vec<&MiningDrill>> {
+    pub fn resource_categories_with_multiple_mining_drills(
+        &self,
+    ) -> HashMap<String, Vec<&MiningDrill>> {
         let mut categories: HashSet<String> = HashSet::new();
         let mut result = HashMap::new();
         for resource in self.resources.values() {
@@ -86,11 +93,14 @@ impl GameData {
         result.retain(|_, v| v.len() > 1);
         result
             .iter_mut()
-            .map(|(_, md_vec)| md_vec
-                .sort_unstable_by(|md1, md2| {
-                    md1.mining_speed.partial_cmp(&md2.mining_speed)
+            .map(|(_, md_vec)| {
+                md_vec.sort_unstable_by(|md1, md2| {
+                    md1.mining_speed
+                        .partial_cmp(&md2.mining_speed)
                         .unwrap_or_else(|| md1.name.cmp(&md2.name))
-                })).for_each(drop);
+                })
+            })
+            .for_each(drop);
         result
     }
 }
@@ -119,11 +129,16 @@ pub enum Icon {
 pub struct IconData {
     pub icon: String,
     #[serde(default = "default_tint")]
-    pub tint: TintColor
+    pub tint: TintColor,
 }
 
 fn default_tint() -> TintColor {
-    TintColor{r: 1.0, g: 1.0, b: 1.0, a: 1.0}
+    TintColor {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -132,7 +147,7 @@ pub struct TintColor {
     pub g: f64,
     pub b: f64,
     #[serde(default = "default_alpha")]
-    pub a: f64
+    pub a: f64,
 }
 
 impl From<TintColor> for Rgba<u8> {
@@ -141,8 +156,9 @@ impl From<TintColor> for Rgba<u8> {
             (t.r * 255.0).round() as u8,
             (t.g * 255.0).round() as u8,
             (t.b * 255.0).round() as u8,
-            (t.a * 255.0).round() as u8
-        ].into()
+            (t.a * 255.0).round() as u8,
+        ]
+        .into()
     }
 }
 
@@ -156,14 +172,17 @@ pub struct Recipe {
     #[serde(default = "default_recipe_category")]
     pub category: String,
     #[serde(flatten)]
-    pub recipe_data: RecipeBody
+    pub recipe_data: RecipeBody,
 }
 
 impl Recipe {
     fn get_recipe_data(&self) -> &RecipeData {
         match &self.recipe_data {
             RecipeBody::Simple { data } => data,
-            RecipeBody::NormalAndExpensive { normal, expensive: _ } => normal
+            RecipeBody::NormalAndExpensive {
+                normal,
+                expensive: _,
+            } => normal,
         }
     }
 
@@ -172,7 +191,11 @@ impl Recipe {
     }
 
     pub fn consumes(&self) -> Vec<(String, f64)> {
-        self.get_recipe_data().ingredients.iter().map(Into::into).collect()
+        self.get_recipe_data()
+            .ingredients
+            .iter()
+            .map(Into::into)
+            .collect()
     }
 
     pub fn energy_required(&self) -> f64 {
@@ -187,14 +210,14 @@ impl Recipe {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeBody {
-    Simple{
+    Simple {
         #[serde(flatten)]
-        data: RecipeData
+        data: RecipeData,
     },
     NormalAndExpensive {
         normal: RecipeData,
-        expensive: RecipeData
-    }
+        expensive: RecipeData,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -205,12 +228,18 @@ pub struct RecipeData {
     #[serde(flatten)]
     pub results: RecipeResults,
     #[serde(default = "default_allow_decomposition")]
-    pub allow_decomposition: bool
+    pub allow_decomposition: bool,
 }
 
-fn default_recipe_category() -> String { "crafting".into() }
-const fn default_energy_required() -> f64 { 0.5 }
-const fn default_allow_decomposition() -> bool { true }
+fn default_recipe_category() -> String {
+    "crafting".into()
+}
+const fn default_energy_required() -> f64 {
+    0.5
+}
+const fn default_allow_decomposition() -> bool {
+    true
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -218,36 +247,41 @@ pub enum RecipeResults {
     Single {
         result: String,
         #[serde(default = "default_result_count")]
-        result_count: f64
+        result_count: f64,
     },
-    Multiple{
-        results: Vec<RecipeResult>
-    }
+    Multiple {
+        results: Vec<RecipeResult>,
+    },
 }
 
 impl From<&RecipeResults> for Vec<(String, f64)> {
     fn from(results: &RecipeResults) -> Self {
         match results {
-            RecipeResults::Single { result, result_count } => vec![(result.clone(), *result_count)],
-            RecipeResults::Multiple { results } => results.iter().map(|rr| rr.into()).collect()
+            RecipeResults::Single {
+                result,
+                result_count,
+            } => vec![(result.clone(), *result_count)],
+            RecipeResults::Multiple { results } => results.iter().map(|rr| rr.into()).collect(),
         }
     }
 }
 
-const fn default_result_count() -> f64 { 1.0 }
+const fn default_result_count() -> f64 {
+    1.0
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeIngredient {
     Struct(RecipeIngredientStruct),
-    Tuple(RecipeIngredientTuple)
+    Tuple(RecipeIngredientTuple),
 }
 
 impl From<&RecipeIngredient> for (String, f64) {
     fn from(ri: &RecipeIngredient) -> Self {
         match &ri {
             RecipeIngredient::Struct(sri) => (sri.name.clone(), (&sri.amount).into()),
-            RecipeIngredient::Tuple(tri) => (tri.0.clone(), tri.1)
+            RecipeIngredient::Tuple(tri) => (tri.0.clone(), tri.1),
         }
     }
 }
@@ -265,20 +299,22 @@ pub struct RecipeIngredientStruct {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RecipeIngredientTuple(String, f64);
 
-const fn default_recipe_ingredient_type() -> RecipeItemType { RecipeItemType::Item }
+const fn default_recipe_ingredient_type() -> RecipeItemType {
+    RecipeItemType::Item
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeResult {
     Tuple(RecipeResultTuple),
-    Struct(RecipeResultStruct)
+    Struct(RecipeResultStruct),
 }
 
 impl From<&RecipeResult> for (String, f64) {
     fn from(rr: &RecipeResult) -> Self {
         match rr {
             RecipeResult::Tuple(trr) => (trr.0.clone(), trr.1),
-            RecipeResult::Struct(srr) => (srr.name.clone(), (&srr.amount).into())
+            RecipeResult::Struct(srr) => (srr.name.clone(), (&srr.amount).into()),
         }
     }
 }
@@ -299,8 +335,8 @@ pub struct RecipeResultStruct {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum RecipeAmount {
-    NamedNumber{
-        amount: f64
+    NamedNumber {
+        amount: f64,
     },
     MinMax {
         amount_min: f64,
@@ -313,17 +349,27 @@ pub enum RecipeAmount {
     MinMaxProbability {
         amount_min: f64,
         amount_max: f64,
-        probability: f64
-    }
+        probability: f64,
+    },
 }
 
 impl From<&RecipeAmount> for f64 {
     fn from(ra: &RecipeAmount) -> f64 {
         match &ra {
-            RecipeAmount::NamedNumber{amount} => *amount,
-            RecipeAmount::MinMax{amount_min, amount_max} => (amount_min + amount_max) / 2.0,
-            RecipeAmount::Probability{amount, probability} => amount * probability,
-            RecipeAmount::MinMaxProbability{amount_min, amount_max, probability} => (amount_min + amount_max) / 2.0 * probability
+            RecipeAmount::NamedNumber { amount } => *amount,
+            RecipeAmount::MinMax {
+                amount_min,
+                amount_max,
+            } => (amount_min + amount_max) / 2.0,
+            RecipeAmount::Probability {
+                amount,
+                probability,
+            } => amount * probability,
+            RecipeAmount::MinMaxProbability {
+                amount_min,
+                amount_max,
+                probability,
+            } => (amount_min + amount_max) / 2.0 * probability,
         }
     }
 }
@@ -332,7 +378,7 @@ impl From<&RecipeAmount> for f64 {
 #[serde(rename_all = "snake_case")]
 pub enum RecipeItemType {
     Item,
-    Fluid
+    Fluid,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -344,7 +390,7 @@ pub struct AssemblingMachine {
     pub crafting_speed: f64,
     #[serde(default = "Vec::new")]
     pub allowed_effects: Vec<EffectType>,
-    pub module_specification: Option<ModuleSpec>
+    pub module_specification: Option<ModuleSpec>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -368,13 +414,13 @@ pub struct Resource {
     #[serde(flatten)]
     pub fluid_requirement: Option<FluidRequirement>,
     #[serde(flatten)]
-    pub results: RecipeResults
+    pub results: RecipeResults,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FluidRequirement {
     pub required_fluid: String,
-    pub fluid_amount: f64
+    pub fluid_amount: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -383,12 +429,12 @@ pub struct OffshorePump {
     pub icon: Icon,
     pub name: String,
     pub fluid: String,
-    pub pumping_speed: f64
+    pub pumping_speed: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModuleSpec {
-    pub module_slots: usize
+    pub module_slots: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -398,7 +444,7 @@ pub struct Module {
     pub category: String,
     pub tier: u8,
     pub effect: HashMap<EffectType, Effect>,
-    pub limitation: Option<Vec<String>>
+    pub limitation: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -407,21 +453,21 @@ pub enum EffectType {
     Speed,
     Consumption,
     Pollution,
-    Productivity
+    Productivity,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Effect {
-    pub bonus: f64
+    pub bonus: f64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ItemGroup {
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ItemSubGroup {
     pub name: String,
-    pub group: String
+    pub group: String,
 }

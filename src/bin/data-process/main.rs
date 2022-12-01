@@ -1,9 +1,17 @@
 use factorio_web_calculator::data::*;
 
-use std::{collections::{HashMap, HashSet}, iter::Iterator, path::{PathBuf, Path}, fs::File};
-use serde_json::{Value, from_reader, to_writer, from_value};
 use clap::Parser;
-use image::{RgbaImage, ImageBuffer, io::Reader, Rgba, Pixel, GenericImageView, imageops::overlay, ImageFormat};
+use image::{
+    imageops::overlay, io::Reader, GenericImageView, ImageBuffer, ImageFormat, Pixel, Rgba,
+    RgbaImage,
+};
+use serde_json::{from_reader, from_value, to_writer, Value};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    iter::Iterator,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Parser)]
 #[clap(about, long_about = None)]
@@ -22,12 +30,16 @@ struct CliParameters {
 struct PathResolver {
     core_path: PathBuf,
     base_path: PathBuf,
-    gen_path: PathBuf
+    gen_path: PathBuf,
 }
 
 impl PathResolver {
     fn new(core_path: PathBuf, base_path: PathBuf, out_dir: &Path) -> Self {
-        Self{core_path, base_path, gen_path: out_dir.join("generated/generated-icons/")}
+        Self {
+            core_path,
+            base_path,
+            gen_path: out_dir.join("generated/generated-icons/"),
+        }
     }
 
     fn resolve(&self, name: &str) -> PathBuf {
@@ -44,7 +56,7 @@ impl PathResolver {
 struct SpriteSheet {
     sheet: RgbaImage,
     size: usize,
-    pos: (usize, usize)
+    pos: (usize, usize),
 }
 
 impl SpriteSheet {
@@ -54,11 +66,20 @@ impl SpriteSheet {
             i += 1
         }
         let image = RgbaImage::new((i * 64) as u32, (i * 64) as u32);
-        Self{sheet: image, size: i * 64, pos: (0, 0)}
+        Self {
+            sheet: image,
+            size: i * 64,
+            pos: (0, 0),
+        }
     }
 
     fn add_sprite(&mut self, image: RgbaImage) -> (usize, usize) {
-        overlay(&mut self.sheet, &image, self.pos.0 as i64, self.pos.1 as i64);
+        overlay(
+            &mut self.sheet,
+            &image,
+            self.pos.0 as i64,
+            self.pos.1 as i64,
+        );
         self.advance()
     }
 
@@ -102,30 +123,68 @@ fn main() {
     let json_data: Value = from_reader(in_file).unwrap();
 
     let game_data = get_data(&json_data);
-    println!("Done parsing data, writing to {}", out_file_path.to_str().unwrap());
+    println!(
+        "Done parsing data, writing to {}",
+        out_file_path.to_str().unwrap()
+    );
 
     let out_file = File::create(out_file_path).unwrap();
     to_writer(out_file, &game_data).unwrap();
 
     // Icons //
 
-    let mut simple_icons: HashMap<String, HashSet<String>> = HashMap::new();    // map path to vec of items that use this icon
+    let mut simple_icons: HashMap<String, HashSet<String>> = HashMap::new(); // map path to vec of items that use this icon
     let mut complex_icons: HashMap<String, Vec<IconData>> = HashMap::new(); // map name of item to icon data
 
     println!("Processing icons for items");
-    game_data.items.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "item", &mut complex_icons, &mut simple_icons));
+    game_data.items.iter().for_each(|(_, item)| {
+        insert_icon(
+            &item.icon,
+            &item.name,
+            "item",
+            &mut complex_icons,
+            &mut simple_icons,
+        )
+    });
 
     println!("Processing icons for assembling machines");
-    game_data.assembling_machines.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "assembling-machine", &mut complex_icons, &mut simple_icons));
+    game_data.assembling_machines.iter().for_each(|(_, item)| {
+        insert_icon(
+            &item.icon,
+            &item.name,
+            "assembling-machine",
+            &mut complex_icons,
+            &mut simple_icons,
+        )
+    });
 
     println!("Processing icons for mining drills");
-    game_data.mining_drills.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "mining-drill", &mut complex_icons, &mut simple_icons));
+    game_data.mining_drills.iter().for_each(|(_, item)| {
+        insert_icon(
+            &item.icon,
+            &item.name,
+            "mining-drill",
+            &mut complex_icons,
+            &mut simple_icons,
+        )
+    });
 
     println!("Processing icons for offshore pumps");
-    game_data.offshore_pumps.iter().for_each(|(_, item)| insert_icon(&item.icon, &item.name, "offshore-pump", &mut complex_icons, &mut simple_icons));
+    game_data.offshore_pumps.iter().for_each(|(_, item)| {
+        insert_icon(
+            &item.icon,
+            &item.name,
+            "offshore-pump",
+            &mut complex_icons,
+            &mut simple_icons,
+        )
+    });
 
     println!("Processing complex icons");
-    let complex_icons: HashMap<String, RgbaImage> = complex_icons.into_iter().map(|(k, icons)| generate_complex_icon(k, icons, &path_resolver)).collect();
+    let complex_icons: HashMap<String, RgbaImage> = complex_icons
+        .into_iter()
+        .map(|(k, icons)| generate_complex_icon(k, icons, &path_resolver))
+        .collect();
 
     println!("Writing complex icons");
     for (name, icon_image) in &complex_icons {
@@ -138,41 +197,43 @@ fn main() {
     // Spritesheet //
 
     println!("Generating spritesheet");
-    let mut simple_icons: HashMap<RgbaImage, HashSet<String>> = simple_icons.into_iter().map(|(path, items)| {
-        let image = Reader::open(path_resolver.resolve(&path))
-            .unwrap()
-            .decode()
-            .unwrap()
-            .to_rgba8()
-            .view(0, 0, 64, 64)
-            .to_image();
-        (image, items)
-    }).collect();
+    let mut simple_icons: HashMap<RgbaImage, HashSet<String>> = simple_icons
+        .into_iter()
+        .map(|(path, items)| {
+            let image = Reader::open(path_resolver.resolve(&path))
+                .unwrap()
+                .decode()
+                .unwrap()
+                .to_rgba8()
+                .view(0, 0, 64, 64)
+                .to_image();
+            (image, items)
+        })
+        .collect();
 
-    simple_icons
-        .extend(complex_icons
-            .into_iter()
-            .map(|(k, v)| (v, [k].into())));
+    simple_icons.extend(complex_icons.into_iter().map(|(k, v)| (v, [k].into())));
 
     let mut spritesheet = SpriteSheet::new(simple_icons.len());
 
-    let icons: HashMap<(usize, usize), HashSet<String>> = simple_icons.into_iter().map(|(image, name)| {
-        (spritesheet.add_sprite(image), name)
-    }).collect();
+    let icons: HashMap<(usize, usize), HashSet<String>> = simple_icons
+        .into_iter()
+        .map(|(image, name)| (spritesheet.add_sprite(image), name))
+        .collect();
 
     spritesheet.write(out_dir.join("generated/spritesheet.png"));
 
     // Mapping //
 
     println!("Generating mapping");
-    let spritesheet_mapping = icons
-        .into_iter()
-        .fold(HashMap::new(), |mut mapping, (pos, names)| {
-        for name in names {
-            mapping.insert(name, pos);
-        }
-        mapping
-    });
+    let spritesheet_mapping =
+        icons
+            .into_iter()
+            .fold(HashMap::new(), |mut mapping, (pos, names)| {
+                for name in names {
+                    mapping.insert(name, pos);
+                }
+                mapping
+            });
 
     {
         let path = out_dir.join("generated/spritesheet-mapping.json");
@@ -194,14 +255,31 @@ fn main() {
     */
 }
 
-fn insert_icon(icon: &Icon, name: &str, prefix: &str, complex_icons: &mut HashMap<String, Vec<IconData>>, simple_icons: &mut HashMap<String, HashSet<String>>) {
+fn insert_icon(
+    icon: &Icon,
+    name: &str,
+    prefix: &str,
+    complex_icons: &mut HashMap<String, Vec<IconData>>,
+    simple_icons: &mut HashMap<String, HashSet<String>>,
+) {
     match icon {
-        Icon::Simple(icon) => {simple_icons.entry(icon.clone()).or_insert_with(HashSet::new).insert(format!("{}-{}", prefix, name));},
-        Icon::Icons(icons) => {complex_icons.insert(format!("{}-{}", prefix, name), icons.clone());},
+        Icon::Simple(icon) => {
+            simple_icons
+                .entry(icon.clone())
+                .or_insert_with(HashSet::new)
+                .insert(format!("{}-{}", prefix, name));
+        }
+        Icon::Icons(icons) => {
+            complex_icons.insert(format!("{}-{}", prefix, name), icons.clone());
+        }
     };
 }
 
-fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathResolver) -> (String, RgbaImage) {
+fn generate_complex_icon(
+    name: String,
+    icons: Vec<IconData>,
+    resolver: &PathResolver,
+) -> (String, RgbaImage) {
     let mut result = ImageBuffer::from_pixel(64, 64, [0, 0, 0, 0].into());
     for icon_data in icons {
         let icon_path = resolver.resolve(&icon_data.icon);
@@ -212,9 +290,11 @@ fn generate_complex_icon(name: String, icons: Vec<IconData>, resolver: &PathReso
             .to_rgba8()
             .view(0, 0, 64, 64)
             .to_image();
-        icon_image.pixels_mut().map(|p| tint_pixel(p, &icon_data.tint)).for_each(drop);
+        icon_image
+            .pixels_mut()
+            .map(|p| tint_pixel(p, &icon_data.tint))
+            .for_each(drop);
         overlay(&mut result, &icon_image, 0, 0)
-        
     }
 
     (name, result)
@@ -229,7 +309,6 @@ fn tint_pixel(pixel: &mut Rgba<u8>, tint: &TintColor) {
 }
 
 fn get_data(json_data: &Value) -> GameData {
-
     println!("Processing items");
     let items: HashMap<String, Item> = json_data["item"]
         .as_object()
@@ -248,27 +327,44 @@ fn get_data(json_data: &Value) -> GameData {
         .map(|(k, v)| (k, from_value(v).unwrap()))
         .collect();
     println!("Processing furnaces");
-    let furnaces: HashMap<String, AssemblingMachine> = from_value(json_data["furnace"].clone()).unwrap();
+    let furnaces: HashMap<String, AssemblingMachine> =
+        from_value(json_data["furnace"].clone()).unwrap();
     println!("Merging furnaces and assembling machines");
     let assembling_machines: HashMap<String, AssemblingMachine> = {
-        assembling_machines.into_iter().chain(furnaces.into_iter()).collect()
+        assembling_machines
+            .into_iter()
+            .chain(furnaces.into_iter())
+            .collect()
     };
 
     println!("Processing item groups and subgroups");
-    let item_groups: HashMap<String, ItemGroup> = from_value(json_data["item-group"].clone()).unwrap();
-    let item_subgroups: HashMap<String, ItemSubGroup> = from_value(json_data["item-subgroup"].clone()).unwrap();
+    let item_groups: HashMap<String, ItemGroup> =
+        from_value(json_data["item-group"].clone()).unwrap();
+    let item_subgroups: HashMap<String, ItemSubGroup> =
+        from_value(json_data["item-subgroup"].clone()).unwrap();
 
     println!("Processing recipes");
     let recipes: HashMap<String, Recipe> = from_value(json_data["recipe"].clone()).unwrap();
 
     println!("Processing mining drills");
-    let mining_drills: HashMap<String, MiningDrill> = from_value(json_data["mining-drill"].clone()).unwrap();
+    let mining_drills: HashMap<String, MiningDrill> =
+        from_value(json_data["mining-drill"].clone()).unwrap();
 
     println!("Processing offshore pumps");
-    let offshore_pumps: HashMap<String, OffshorePump> = from_value(json_data["offshore-pump"].clone()).unwrap();
+    let offshore_pumps: HashMap<String, OffshorePump> =
+        from_value(json_data["offshore-pump"].clone()).unwrap();
 
     println!("Processing resources");
     let resources: HashMap<String, Resource> = from_value(json_data["resource"].clone()).unwrap();
 
-    GameData{items, recipes, assembling_machines, item_groups, item_subgroups, mining_drills, offshore_pumps, resources}
+    GameData {
+        items,
+        recipes,
+        assembling_machines,
+        item_groups,
+        item_subgroups,
+        mining_drills,
+        offshore_pumps,
+        resources,
+    }
 }
