@@ -169,7 +169,7 @@ enum Route {
     Home,
 }
 
-fn switch(route: &Route) -> Html {
+fn switch(route: Route) -> Html {
     match route {
         Route::Home => html! { <Calculator /> },
         Route::Settings => html! { <UserSettingsPage /> },
