@@ -180,7 +180,7 @@ fn switch(route: &Route) -> Html {
 fn app() -> Html {
     html! {
         <BrowserRouter>
-            <Switch<Route> render={Switch::render(switch)} />
+            <Switch<Route> render={switch} />
         </BrowserRouter>
     }
 }
@@ -1254,5 +1254,5 @@ impl Component for FactoryStep {
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<MainApp>();
+    yew::Renderer::<MainApp>::new().render();
 }
