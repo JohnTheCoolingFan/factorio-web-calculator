@@ -55,12 +55,10 @@ impl Component for Calculator {
                 self.targets.remove(idx);
             }
             CalculatorMessage::ChangeItem(idx, name) => {
-                let item = self.targets.get_mut(idx).unwrap();
-                item.name = name;
+                self.targets[idx].name = name;
             }
             CalculatorMessage::ChangeRate(idx, rate) => {
-                let item = self.targets.get_mut(idx).unwrap();
-                item.rate = rate;
+                self.targets[idx].rate = rate;
             }
         }
         self.calculation = Calculation::default().solve(&self.targets);
