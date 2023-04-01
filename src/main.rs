@@ -1,4 +1,7 @@
+mod components;
 mod data;
+
+use components::*;
 
 use data::*;
 use gloo_storage::Storage;
