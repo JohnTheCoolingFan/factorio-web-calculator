@@ -17,6 +17,7 @@ thiserror = "1.0"
 log = "0.4"
 wasm-logger = "0.2"
 gloo-storage = "0.2"
+hashbrown = { version = "0.13", features = ["serde"] }
 
 [[bin]]
 name = "data-process"
