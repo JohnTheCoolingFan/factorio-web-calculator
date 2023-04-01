@@ -62,17 +62,15 @@ impl Component for InputItem {
         let link = ctx.link();
 
         let on_factories_change = link.batch_callback(|e: Event| {
-            let target: Option<EventTarget> = e.target();
-
-            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
-            input.and_then(|i| Some(InputItemMessage::Factories(i.value().parse().ok()?)))
+            e.target()
+                .and_then(|t| t.dyn_into::<HtmlInputElement>().ok())
+                .and_then(|i| Some(InputItemMessage::Factories(i.value().parse().ok()?)))
         });
 
         let on_ips_change = link.batch_callback(|e: Event| {
-            let target: Option<EventTarget> = e.target();
-
-            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
-            input.and_then(|i| Some(InputItemMessage::ItemsPerSecond(i.value().parse().ok()?)))
+            e.target()
+                .and_then(|t| t.dyn_into::<HtmlInputElement>().ok())
+                .and_then(|i| Some(InputItemMessage::ItemsPerSecond(i.value().parse().ok()?)))
         });
 
         let ips = Factory::ips_for_item(&props.item);
