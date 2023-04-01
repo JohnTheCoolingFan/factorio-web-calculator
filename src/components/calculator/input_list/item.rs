@@ -1,5 +1,5 @@
 use wasm_bindgen::JsCast;
-use web_sys::{EventTarget, HtmlInputElement};
+use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 use crate::components::{
