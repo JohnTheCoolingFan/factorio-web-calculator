@@ -14,7 +14,7 @@ use std::{
 };
 
 #[derive(Debug, Parser)]
-#[clap(about, long_about = None)]
+#[clap(about, long_about = Some("Purpose of this tool is to parse, collect, strip, process and output data in a desired format for use in calculator"))]
 struct CliParameters {
     /// Path to Factorio installation dir
     #[clap(short, long, parse(from_os_str), value_name = "FACTORIO_DIR")]
