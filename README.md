@@ -1,4 +1,4 @@
-[![try online](https://img.shields.io/badge/try%20online-github.io-blue)](https://johnthecoolingfan.github.io/factorio-web-calculator/)
+[![try online](https://img.shields.io/badge/try%20online-github.io-blue?style=flat)](https://johnthecoolingfan.github.io/factorio-web-calculator/)
 
 # Another Factorio Calculator in Web
 
