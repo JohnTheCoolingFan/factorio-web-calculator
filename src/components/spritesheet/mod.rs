@@ -17,6 +17,18 @@ pub struct SpriteSheetIconProperties {
     pub name: String,
 }
 
+impl SpriteSheetIcon {
+    fn get_icon_pos(prefix: &str, name: &str) -> (usize, usize) {
+        *ICON_MAP
+            .get(&format!("{}-{}", prefix, name))
+            .or_else(|| ICON_MAP.get(&format!("item-{}", UNKNOWN_ITEM)))
+            .unwrap_or(&(
+                ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
+                ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
+            ))
+    }
+}
+
 impl Component for SpriteSheetIcon {
     type Message = ();
     type Properties = SpriteSheetIconProperties;
@@ -27,13 +39,7 @@ impl Component for SpriteSheetIcon {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let props = ctx.props();
-        let pos = ICON_MAP
-            .get(&format!("{}-{}", props.prefix, props.name))
-            .or_else(|| ICON_MAP.get(&format!("item-{}", UNKNOWN_ITEM)))
-            .unwrap_or(&(
-                ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
-                ORIGINAL_SPRITESHEET_SIZE - ORIGINAL_ICON_SIZE,
-            ));
+        let pos = Self::get_icon_pos(&props.prefix, &props.name);
         html! {
             <img src="assets/empty.gif" title={props.name.clone()} alt={props.name.clone()} style={ format!("background-image: url(\"assets/generated/spritesheet.png\"); background-position-x: -{0}px; background-position-y: -{1}px; width: {2}px; height: {2}px; background-size: {3}px", pos.0 / DOWNSCALE, pos.1 / DOWNSCALE, ICON_SIZE, SPRITESHEET_SIZE) }/>
         }
