@@ -67,7 +67,7 @@ impl Component for Calculator {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
-        let steps: Vec<CalcStep> = self
+        let mut steps: Vec<CalcStep> = self
             .calculation
             .as_ref()
             .map(|calc| {
@@ -80,6 +80,8 @@ impl Component for Calculator {
                     .collect()
             })
             .unwrap_or_default();
+        steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
+        steps.reverse();
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
         html! {

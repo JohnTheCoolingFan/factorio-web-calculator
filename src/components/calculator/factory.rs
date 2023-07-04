@@ -1,4 +1,7 @@
-use std::hash::{Hash, Hasher};
+use std::{
+    cmp::Ordering,
+    hash::{Hash, Hasher},
+};
 
 use crate::{
     constants::{GAME_DATA, RECIPE_BLACKLIST},
@@ -54,6 +57,49 @@ impl Hash for Factory<'_> {
 }
 
 impl<'a> Factory<'a> {
+    pub fn sort_by(&self, other: &Self) -> Ordering {
+        let mut counter = 0;
+
+        for produced_item in self.produces() {
+            if other.consumes(&produced_item) {
+                counter -= 1;
+            }
+        }
+
+        for produced_item in other.produces() {
+            if self.consumes(&produced_item) {
+                counter += 1;
+            }
+        }
+
+        counter.cmp(&0)
+    }
+
+    fn consumes(&self, item: &str) -> bool {
+        match self {
+            Self::AssemblingMachine(_, recipe) => recipe
+                .consumes()
+                .iter()
+                .any(|(item_name, _)| item_name == item),
+            _ => false,
+        }
+    }
+
+    fn produces(&self) -> Vec<String> {
+        match self {
+            Self::AssemblingMachine(_, recipe) => recipe
+                .produces()
+                .into_iter()
+                .map(|(name, _)| name)
+                .collect(),
+            Self::MiningDrill(_, resource) => Vec::from(&resource.results)
+                .into_iter()
+                .map(|(name, _)| name)
+                .collect(),
+            Self::OffshorePump(op) => vec![op.fluid.clone()],
+        }
+    }
+
     pub fn produced_per_sec(&self) -> Vec<(String, f64)> {
         match self {
             Factory::AssemblingMachine(am, re) => re
