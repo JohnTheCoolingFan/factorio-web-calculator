@@ -28,7 +28,7 @@ impl Component for AddItem {
     fn view(&self, ctx: &Context<Self>) -> Html {
         let link = ctx.link();
         html! {
-            <li>
+            <li key={usize::MAX}>
                 <button class="add-item" onclick={link.callback(|_| ())}> {"+"} </button>
             </li>
         }

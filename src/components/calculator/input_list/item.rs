@@ -76,15 +76,15 @@ impl Component for InputItem {
         let ips = Factory::ips_for_item(&props.item);
 
         html! {
-            <li class="target">
-                // Remove this item from the list
+            <li class="target" key = {props.index}>
+                // Button to remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
-                // Change this item's target
+                // Button to change this item's target
                 <ItemSelectDropdown index={props.index} selected_item={props.item.clone()} callback={link.callback(InputItemMessage::ItemSelected)} />
-                // Input factories
+                // Field to input amount of factories
                 {"Factories: "}
                 <input type="text" onchange={on_factories_change} value={props.rate.as_factories(ips).to_string()} />
-                // Input Items Per Second
+                // Field to input Items Per Second
                 {"items/s: "}
                 <input type="text" onchange={on_ips_change} value={props.rate.as_ips(ips).to_string()}/>
             </li>
