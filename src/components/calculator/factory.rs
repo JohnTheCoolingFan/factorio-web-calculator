@@ -3,6 +3,8 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+use hashbrown::HashSet;
+
 use crate::{
     constants::{GAME_DATA, RECIPE_BLACKLIST},
     data::*,
@@ -58,34 +60,35 @@ impl Hash for Factory<'_> {
 
 impl<'a> Factory<'a> {
     pub fn sort_by(&self, other: &Self) -> Ordering {
-        let mut counter = 0;
+        let mut counter: isize = 0;
 
-        for produced_item in self.produces() {
-            if other.consumes(&produced_item) {
-                counter -= 1;
-            }
-        }
+        counter += other
+            .consumes()
+            .intersection(&self.produces())
+            .collect::<HashSet<_>>()
+            .len() as isize;
 
-        for produced_item in other.produces() {
-            if self.consumes(&produced_item) {
-                counter += 1;
-            }
-        }
+        counter -= self
+            .consumes()
+            .intersection(&other.produces())
+            .collect::<HashSet<_>>()
+            .len() as isize;
 
         counter.cmp(&0)
     }
 
-    fn consumes(&self, item: &str) -> bool {
+    fn consumes(&self) -> HashSet<String> {
         match self {
             Self::AssemblingMachine(_, recipe) => recipe
                 .consumes()
-                .iter()
-                .any(|(item_name, _)| item_name == item),
-            _ => false,
+                .into_iter()
+                .map(|(name, _)| name)
+                .collect(),
+            _ => HashSet::default(),
         }
     }
 
-    fn produces(&self) -> Vec<String> {
+    fn produces(&self) -> HashSet<String> {
         match self {
             Self::AssemblingMachine(_, recipe) => recipe
                 .produces()
@@ -96,7 +99,7 @@ impl<'a> Factory<'a> {
                 .into_iter()
                 .map(|(name, _)| name)
                 .collect(),
-            Self::OffshorePump(op) => vec![op.fluid.clone()],
+            Self::OffshorePump(op) => HashSet::from([op.fluid.clone()]),
         }
     }
 

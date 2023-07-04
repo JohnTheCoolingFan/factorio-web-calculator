@@ -80,8 +80,8 @@ impl Component for Calculator {
                     .collect()
             })
             .unwrap_or_default();
-        steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
-        steps.reverse();
+        // Commented out because this doesn't work well with optimized sorting algos
+        //steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
         html! {
