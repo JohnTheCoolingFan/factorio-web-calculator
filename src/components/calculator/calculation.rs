@@ -6,7 +6,7 @@ use thiserror::Error;
 #[derive(Debug, Clone, Default)]
 pub struct Calculation {
     vector: HashMap<String, f64>,
-    pub steps: Vec<CalcStep>,
+    pub steps: HashMap<Factory<'static>, f64>,
 }
 
 impl Calculation {
@@ -56,7 +56,8 @@ impl Calculation {
             let val = self.vector.entry(name.clone()).or_insert(0.0);
             *val -= amount;
         }
-        self.steps.push(step)
+        let step_entry = self.steps.entry(step.factory).or_insert(0.0);
+        *step_entry += step.amount;
     }
 
     fn is_solved(&self) -> bool {

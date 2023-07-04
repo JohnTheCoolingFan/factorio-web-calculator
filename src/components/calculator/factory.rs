@@ -1,3 +1,5 @@
+use std::hash::{Hash, Hasher};
+
 use crate::{
     constants::{GAME_DATA, RECIPE_BLACKLIST},
     data::*,
@@ -6,11 +8,49 @@ use crate::{
 
 use super::CalculationError;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Factory<'a> {
     AssemblingMachine(&'a AssemblingMachine, &'a Recipe),
     MiningDrill(&'a MiningDrill, &'a Resource),
     OffshorePump(&'a OffshorePump),
+}
+
+impl PartialEq for Factory<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::AssemblingMachine(am1, rec1), Self::AssemblingMachine(am2, rec2)) => {
+                am1.name.eq(&am2.name) && rec1.name.eq(&rec2.name)
+            }
+            (Self::MiningDrill(md1, res1), Self::MiningDrill(md2, res2)) => {
+                md1.name.eq(&md2.name) && res1.name.eq(&res2.name)
+            }
+            (Self::OffshorePump(op1), Self::OffshorePump(op2)) => op1.name.eq(&op2.name),
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Factory<'_> {}
+
+impl Hash for Factory<'_> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::AssemblingMachine(am, rec) => {
+                state.write_u8(1);
+                am.name.hash(state);
+                rec.name.hash(state);
+            }
+            Self::MiningDrill(md, res) => {
+                state.write_u8(2);
+                md.name.hash(state);
+                res.name.hash(state)
+            }
+            Self::OffshorePump(op) => {
+                state.write_u8(3);
+                op.name.hash(state)
+            }
+        }
+    }
 }
 
 impl<'a> Factory<'a> {

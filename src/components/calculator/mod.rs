@@ -5,8 +5,6 @@ mod calculation;
 mod factory;
 mod input_list;
 
-use std::borrow::Cow;
-
 pub use calc_step::*;
 pub use calc_target::*;
 pub use calc_target_rate::*;
@@ -69,11 +67,19 @@ impl Component for Calculator {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
-        let steps: Cow<[CalcStep]> = if let Ok(calculation) = &self.calculation {
-            Cow::Borrowed(&calculation.steps)
-        } else {
-            vec![].into()
-        };
+        let steps: Vec<CalcStep> = self
+            .calculation
+            .as_ref()
+            .map(|calc| {
+                calc.steps
+                    .iter()
+                    .map(|(factory, amount)| CalcStep {
+                        factory: factory.clone(),
+                        amount: *amount,
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
         html! {
