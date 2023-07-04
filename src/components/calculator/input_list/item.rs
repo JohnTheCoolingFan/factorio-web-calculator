@@ -80,7 +80,6 @@ impl Component for InputItem {
                 // Remove this item from the list
                 <button class="remove-item" onclick={link.callback(|_| InputItemMessage::Remove)}> {"x"} </button>
                 // Change this item's target
-                //<button class="target-item" onclick={link.callback(|_| InputItemMessage::OpenItem)}> <ItemIcon item={props.item.clone()}/> </button>
                 <ItemSelectDropdown index={props.index} selected_item={props.item.clone()} callback={link.callback(InputItemMessage::ItemSelected)} />
                 // Input factories
                 {"Factories: "}
@@ -88,9 +87,6 @@ impl Component for InputItem {
                 // Input Items Per Second
                 {"items/s: "}
                 <input type="text" onchange={on_ips_change} value={props.rate.as_ips(ips).to_string()}/>
-                // Input item manually
-                //{"item: "}
-                //<input type="text" onchange={on_item_selected} value={props.item.clone()}/>
             </li>
         }
     }
