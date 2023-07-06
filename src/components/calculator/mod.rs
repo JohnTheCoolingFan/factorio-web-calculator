@@ -9,6 +9,7 @@ pub use calc_step::*;
 pub use calc_target::*;
 pub use calc_target_rate::*;
 pub use calculation::*;
+use factorio_web_calculator::data::GameData;
 pub use factory::*;
 pub use input_list::*;
 
@@ -23,10 +24,12 @@ use yew_router::prelude::*;
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
     pub calculation: Option<Result<Calculation, CalculationError>>,
+    pub game_data: Option<Box<GameData>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CalculatorMessage {
+    GameDataReady(Box<GameData>),
     RemoveItem(usize),
     AddItem(CalcTarget),
     ChangeItem(usize, String),
@@ -49,21 +52,29 @@ impl Component for Calculator {
         Self {
             targets: vec![],
             calculation: None,
+            game_data: None,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            CalculatorMessage::AddItem(target) => {
+        match (&self.game_data, msg) {
+            (None, CalculatorMessage::GameDataReady(game_data)) => self.game_data = Some(game_data),
+            (Some(_), CalculatorMessage::GameDataReady(game_data)) => {
+                log::warn!("Changed game data when it is already set");
+                self.game_data = Some(game_data);
+            }
+            // If game data is not available then other messages don't change anything
+            (None, _) => return false,
+            (Some(_), CalculatorMessage::AddItem(target)) => {
                 self.targets.push(target);
             }
-            CalculatorMessage::RemoveItem(idx) => {
+            (Some(_), CalculatorMessage::RemoveItem(idx)) => {
                 self.targets.remove(idx);
             }
-            CalculatorMessage::ChangeItem(idx, name) => {
+            (Some(_), CalculatorMessage::ChangeItem(idx, name)) => {
                 self.targets[idx].name = name;
             }
-            CalculatorMessage::ChangeRate(idx, rate) => {
+            (Some(_), CalculatorMessage::ChangeRate(idx, rate)) => {
                 self.targets[idx].rate = rate;
             }
         }
