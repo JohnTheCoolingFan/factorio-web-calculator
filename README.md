@@ -2,7 +2,9 @@
 
 # Another Factorio Calculator in Web
 
-Available online: https://johnthecoolingfan.github.io/factorio-web-calculator/
+Available online on my website or github pages:
+- https://jtcf.ru/factorio-web-calculator/
+- https://johnthecoolingfan.github.io/factorio-web-calculator/
 
 Starting the calculator locally using [trunk](https://trunkrs.dev): `trunk serve`
 
