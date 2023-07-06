@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 jobs:
-  build:
+  deploy-ghpages:
 
     runs-on: ubuntu-latest
 
@@ -45,3 +45,38 @@ jobs:
       with:
         branch: gh-pages
         folder: dist
+
+  release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install wasm target
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        default: true
+        target: wasm32-unknown-unknown
+    - uses: jetli/trunk-action@v0.1.0
+    - name: Prepare regular build
+      shell: bash
+      run: |
+        rm 404.html
+    - name: Build
+      run: trunk build --release
+    - name: Package
+      shell: bash
+      run: |
+        tar czvf factorio-web-calculator.tar.gz dist
+        zip -r factorio-web-calculator.zip dist
+        shasum -a 256 factorio-web-calculator.tar.gz > factorio-web-calculator.tar.gz.sha256
+        shasum -a 256 factorio-web-calculator.zip > factorio-web-calculator.zip.sha256
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          factorio-web-calculator.tar.gz
+          factorio-web-calculator.tar.gz.sha256
+          factorio-web-calculator.zip
+          factorio-web-calculator.zip.sha256
