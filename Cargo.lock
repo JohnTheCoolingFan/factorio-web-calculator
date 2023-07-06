@@ -269,6 +269,7 @@ name = "factorio-web-calculator"
 version = "0.2.4"
 dependencies = [
  "clap",
+ "gloo-net",
  "gloo-storage",
  "hashbrown 0.13.2",
  "image",
