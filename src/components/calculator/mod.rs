@@ -39,15 +39,22 @@ pub enum CalculatorMessage {
 
 impl Calculator {
     async fn fetch_game_data() -> CalculatorMessage {
-        let game_data: GameData =
-            Request::get("/factorio-web-calculator/assets/generated/processed_data.json")
-                .send()
-                .await
-                .unwrap()
-                .json()
-                .await
-                .unwrap();
-        CalculatorMessage::GameDataReady(Box::new(game_data))
+        match Request::get("/factorio-web-calculator/assets/generated/processed-data.json")
+            .send()
+            .await
+        {
+            Err(req_err) => {
+                log::error!("Failed to request game data: {}", req_err);
+                panic!("Failed to request game data: {}", req_err);
+            }
+            Ok(req) => match req.json().await {
+                Err(parse_err) => {
+                    log::error!("Failed to parse game data: {}", parse_err);
+                    panic!("Failed to parse game data: {}", parse_err);
+                }
+                Ok(game_data) => CalculatorMessage::GameDataReady(Box::new(game_data)),
+            },
+        }
     }
 }
 
@@ -68,9 +75,13 @@ impl Component for Calculator {
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match (&self.game_data, msg) {
-            (None, CalculatorMessage::GameDataReady(game_data)) => self.game_data = Some(game_data),
+            (None, CalculatorMessage::GameDataReady(game_data)) => {
+                self.targets = vec![CalcTarget::default()];
+                self.game_data = Some(game_data);
+            }
             (Some(_), CalculatorMessage::GameDataReady(game_data)) => {
                 log::warn!("Changed game data when it is already set");
+                self.targets = vec![CalcTarget::default()];
                 self.game_data = Some(game_data);
             }
             // If game data is not available then other messages don't change anything
