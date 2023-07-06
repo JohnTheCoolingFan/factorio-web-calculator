@@ -22,7 +22,7 @@ use yew_router::prelude::*;
 #[derive(Debug)]
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
-    pub calculation: Result<Calculation, CalculationError>,
+    pub calculation: Option<Result<Calculation, CalculationError>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -38,11 +38,17 @@ impl Component for Calculator {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
+        /*
         let targets = vec![CalcTarget::default()];
         let calculation = Calculation::default().solve(&targets);
         Self {
             targets,
             calculation,
+        }
+        */
+        Self {
+            targets: vec![],
+            calculation: None,
         }
     }
 
@@ -61,15 +67,18 @@ impl Component for Calculator {
                 self.targets[idx].rate = rate;
             }
         }
-        self.calculation = Calculation::default().solve(&self.targets);
+        self.calculation = Some(Calculation::default().solve(&self.targets));
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
+        // Silenced the warning because sorting the resulting steps is planned
+        #[allow(unused_mut)]
         let mut steps: Vec<CalcStep> = self
             .calculation
             .as_ref()
+            .and_then(|rescalc| rescalc.as_ref().ok())
             .map(|calc| {
                 calc.steps
                     .iter()
@@ -84,6 +93,15 @@ impl Component for Calculator {
         //steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
+        let status_message = if let Some(rescalc) = &self.calculation {
+            if let Err(why) = rescalc {
+                format!("An error occured: {}", why)
+            } else {
+                String::from("No errors during calculation")
+            }
+        } else {
+            String::from("Calculation is not ready yet")
+        };
         html! {
             <div id="calc">
                 <p> { "This is a calculator" } </p>
@@ -102,7 +120,7 @@ impl Component for Calculator {
                 }) }
                 <AddItem onclick={link.callback(|m| m)}/>
                 </InputList>
-                <p>{ if let Err(why) = &self.calculation { format!("An error occured: {}", why) } else { "no errors".into() } }</p>
+                <p>{ status_message }</p>
                 <FactorySteps>
                 {
                     for steps.iter().map(|step| {
