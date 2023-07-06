@@ -11,6 +11,7 @@ pub use calc_target_rate::*;
 pub use calculation::*;
 use factorio_web_calculator::data::GameData;
 pub use factory::*;
+use gloo_net::http::Request;
 pub use input_list::*;
 
 use crate::{
@@ -36,11 +37,25 @@ pub enum CalculatorMessage {
     ChangeRate(usize, CalcTargetRate),
 }
 
+impl Calculator {
+    async fn fetch_game_data() -> CalculatorMessage {
+        let game_data: GameData =
+            Request::get("/factorio-web-calculator/assets/generated/processed_data.json")
+                .send()
+                .await
+                .unwrap()
+                .json()
+                .await
+                .unwrap();
+        CalculatorMessage::GameDataReady(Box::new(game_data))
+    }
+}
+
 impl Component for Calculator {
     type Message = CalculatorMessage;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         /*
         let targets = vec![CalcTarget::default()];
         let calculation = Calculation::default().solve(&targets);
@@ -49,6 +64,10 @@ impl Component for Calculator {
             calculation,
         }
         */
+
+        let scope = ctx.link();
+        scope.send_future(Self::fetch_game_data());
+
         Self {
             targets: vec![],
             calculation: None,
