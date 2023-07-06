@@ -13,6 +13,8 @@ pub static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
     RwLock::new(result)
 });
 
+// todo: move game data to AppRoot and do the same with user settings and icon mapping
+
 #[derive(Debug, Clone, Routable, PartialEq)]
 enum Route {
     #[at("/settings")]
