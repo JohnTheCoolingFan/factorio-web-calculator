@@ -19,23 +19,27 @@ jobs:
         default: true
         target: wasm32-unknown-unknown
     - uses: jetli/trunk-action@v0.1.0
+    - name: Prepare GH Pages build
+      shell: bash
+      run: |
+        cp index-ghpages.html index.html
     - name: Build
       run: trunk build --release
     - name: Package
       shell: bash
       run: |
-        tar czvf factorio-web-calculator.tar.gz dist
-        zip -r factorio-web-calculator.zip dist
-        shasum -a 256 factorio-web-calculator.tar.gz > factorio-web-calculator.tar.gz.sha256
-        shasum -a 256 factorio-web-calculator.zip > factorio-web-calculator.zip.sha256
+        tar czvf factorio-web-calculator-ghpages.tar.gz dist
+        zip -r factorio-web-calculator-ghpages.zip dist
+        shasum -a 256 factorio-web-calculator-ghpages.tar.gz > factorio-web-calculator-ghpages.tar.gz.sha256
+        shasum -a 256 factorio-web-calculator-ghpages.zip > factorio-web-calculator-ghpages.zip.sha256
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          factorio-web-calculator.tar.gz
-          factorio-web-calculator.tar.gz.sha256
-          factorio-web-calculator.zip
-          factorio-web-calculator.zip.sha256
+          factorio-web-calculator-ghpages.tar.gz
+          factorio-web-calculator-ghpages.tar.gz.sha256
+          factorio-web-calculator-ghpages.zip
+          factorio-web-calculator-ghpages.zip.sha256
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4.3.3
       with:
