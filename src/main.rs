@@ -28,8 +28,8 @@ fn switch(route: Route) -> Html {
     }
 }
 
-#[function_component(MainApp)]
-fn app() -> Html {
+#[function_component(AppRoot)]
+fn app_root() -> Html {
     html! {
         <BrowserRouter>
             <Switch<Route> render={switch} />
@@ -39,5 +39,5 @@ fn app() -> Html {
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::Renderer::<MainApp>::new().render();
+    yew::Renderer::<AppRoot>::new().render();
 }
