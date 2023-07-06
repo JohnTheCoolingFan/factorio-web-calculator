@@ -56,15 +56,6 @@ impl Component for Calculator {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        /*
-        let targets = vec![CalcTarget::default()];
-        let calculation = Calculation::default().solve(&targets);
-        Self {
-            targets,
-            calculation,
-        }
-        */
-
         let scope = ctx.link();
         scope.send_future(Self::fetch_game_data());
 
