@@ -112,12 +112,15 @@ impl Component for AppRoot {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         let game_data_context = self.game_data.clone();
+        let icon_map_context = self.icon_map.clone();
 
         html! {
             <ContextProvider<Option<Rc<GameData>>> context = {game_data_context}>
+            <ContextProvider<Option<Rc<IconMap>>> context = {icon_map_context}>
                 <BrowserRouter>
                     <Switch<Route> render={switch} />
                 </BrowserRouter>
+            </ContextProvider<Option<Rc<IconMap>>>>
             </ContextProvider<Option<Rc<GameData>>>>
         }
     }
