@@ -34,8 +34,6 @@ impl Deref for WrappedUserSettings {
     }
 }
 
-// todo: move game data to AppRoot and do the same with user settings and icon mapping
-
 #[derive(Debug, Clone, Routable, PartialEq)]
 enum Route {
     #[at("/settings")]
