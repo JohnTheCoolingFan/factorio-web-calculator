@@ -12,6 +12,8 @@ use std::{ops::Deref, rc::Rc, sync::RwLock};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+// TODO: finish other prototype refs, migrate otehr components to use contexts
+
 #[derive(Debug)]
 pub struct WrappedUserSettings {
     user_settings: RwLock<UserSettings>,
