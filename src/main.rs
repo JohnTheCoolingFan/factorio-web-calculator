@@ -2,6 +2,7 @@ mod components;
 mod constants;
 mod data;
 mod icon_map;
+mod prototype_ref;
 
 use components::*;
 use factorio_web_calculator::data::GameData;
