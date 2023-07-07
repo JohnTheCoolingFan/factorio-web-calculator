@@ -43,7 +43,7 @@ pub struct AppRoot {
 #[derive(Debug)]
 pub enum AppRootMessage {
     GameDataReady(Rc<GameData>),
-    IconMapREady(Rc<IconMap>),
+    IconMapReady(Rc<IconMap>),
 }
 
 impl AppRoot {
@@ -80,7 +80,7 @@ impl AppRoot {
                     log::error!("Failed to parse spritesheet mapping: {}", parse_err);
                     panic!("Failed to parse spritesheet mapping: {}", parse_err);
                 }
-                Ok(icon_map) => AppRootMessage::IconMapREady(Rc::new(icon_map)),
+                Ok(icon_map) => AppRootMessage::IconMapReady(Rc::new(icon_map)),
             },
         }
     }
@@ -105,7 +105,7 @@ impl Component for AppRoot {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             AppRootMessage::GameDataReady(game_data) => self.game_data = Some(game_data),
-            AppRootMessage::IconMapREady(icon_map) => self.icon_map = Some(icon_map),
+            AppRootMessage::IconMapReady(icon_map) => self.icon_map = Some(icon_map),
         }
         true
     }
