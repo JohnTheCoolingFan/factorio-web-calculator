@@ -1,7 +1,9 @@
 use hashbrown::HashMap;
+use serde::Deserialize;
 use std::ops::Deref;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
+#[serde(transparent)]
 pub struct IconMap {
     icon_map: HashMap<String, (usize, usize)>,
 }
