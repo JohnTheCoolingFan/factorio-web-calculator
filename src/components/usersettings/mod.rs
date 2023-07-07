@@ -13,7 +13,7 @@ use crate::{constants::GAME_DATA, data::*};
 use gloo_storage::Storage;
 use hashbrown::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct UserSettings {
     recipe_category_prefs: HashMap<String, &'static AssemblingMachine>,
     resource_category_prefs: HashMap<String, &'static MiningDrill>,
