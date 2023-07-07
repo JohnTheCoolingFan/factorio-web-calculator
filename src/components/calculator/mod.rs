@@ -5,13 +5,14 @@ mod calculation;
 mod factory;
 mod input_list;
 
+use std::rc::Rc;
+
 pub use calc_step::*;
 pub use calc_target::*;
 pub use calc_target_rate::*;
 pub use calculation::*;
 use factorio_web_calculator::data::GameData;
 pub use factory::*;
-use gloo_net::http::Request;
 pub use input_list::*;
 
 use crate::{
@@ -25,37 +26,18 @@ use yew_router::prelude::*;
 pub struct Calculator {
     pub targets: Vec<CalcTarget>,
     pub calculation: Option<Result<Calculation, CalculationError>>,
-    pub game_data: Option<Box<GameData>>,
+    #[allow(dead_code)]
+    game_data_context_listener: ContextHandle<Option<Rc<GameData>>>,
+    pub game_data: Option<Rc<GameData>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CalculatorMessage {
-    GameDataReady(Box<GameData>),
+    GameDataUpdated(Option<Rc<GameData>>),
     RemoveItem(usize),
     AddItem(CalcTarget),
     ChangeItem(usize, String),
     ChangeRate(usize, CalcTargetRate),
-}
-
-impl Calculator {
-    async fn fetch_game_data() -> CalculatorMessage {
-        match Request::get("/factorio-web-calculator/assets/generated/processed-data.json")
-            .send()
-            .await
-        {
-            Err(req_err) => {
-                log::error!("Failed to request game data: {}", req_err);
-                panic!("Failed to request game data: {}", req_err);
-            }
-            Ok(req) => match req.json().await {
-                Err(parse_err) => {
-                    log::error!("Failed to parse game data: {}", parse_err);
-                    panic!("Failed to parse game data: {}", parse_err);
-                }
-                Ok(game_data) => CalculatorMessage::GameDataReady(Box::new(game_data)),
-            },
-        }
-    }
 }
 
 impl Component for Calculator {
@@ -64,25 +46,28 @@ impl Component for Calculator {
 
     fn create(ctx: &Context<Self>) -> Self {
         let scope = ctx.link();
-        scope.send_future(Self::fetch_game_data());
+        let (game_data, game_data_context_listener) = scope
+            .context(scope.callback(CalculatorMessage::GameDataUpdated))
+            .expect("Game Data context was not provided");
 
         Self {
             targets: vec![],
             calculation: None,
-            game_data: None,
+            game_data,
+            game_data_context_listener,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match (&self.game_data, msg) {
-            (None, CalculatorMessage::GameDataReady(game_data)) => {
+            (None, CalculatorMessage::GameDataUpdated(game_data)) => {
                 self.targets = vec![CalcTarget::default()];
-                self.game_data = Some(game_data);
+                self.game_data = game_data
             }
-            (Some(_), CalculatorMessage::GameDataReady(game_data)) => {
+            (Some(_), CalculatorMessage::GameDataUpdated(game_data)) => {
                 log::warn!("Changed game data when it is already set");
                 self.targets = vec![CalcTarget::default()];
-                self.game_data = Some(game_data);
+                self.game_data = game_data
             }
             // If game data is not available then other messages don't change anything
             (None, _) => return false,
