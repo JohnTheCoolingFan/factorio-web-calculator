@@ -30,7 +30,7 @@ impl UserSettings {
 
     pub fn change_recipe_category(&mut self, category: &str, machine: &'static AssemblingMachine) {
         log::info!(
-            "Changed assembler for categpry {} to {}",
+            "Changed assembler for category {} to {}",
             category,
             machine.name
         );
