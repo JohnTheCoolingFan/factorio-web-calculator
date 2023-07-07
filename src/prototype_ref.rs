@@ -1,6 +1,6 @@
 use factorio_web_calculator::data::{AssemblingMachine, GameData, MiningDrill};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AssemblingMachineRef {
     name: String,
 }
@@ -19,7 +19,7 @@ impl AssemblingMachineRef {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MiningDrillRef {
     name: String,
 }

@@ -5,18 +5,12 @@ mod icon_map;
 mod prototype_ref;
 
 use components::*;
-use factorio_web_calculator::data::GameData;
+use data::GameData;
 use gloo_net::http::Request;
 use icon_map::IconMap;
-use once_cell::sync::Lazy;
 use std::{ops::Deref, rc::Rc, sync::RwLock};
 use yew::prelude::*;
 use yew_router::prelude::*;
-
-pub static USER_SETTINGS: Lazy<RwLock<UserSettings>> = Lazy::new(|| {
-    let result = UserSettings::create();
-    RwLock::new(result)
-});
 
 #[derive(Debug)]
 pub struct WrappedUserSettings {
@@ -111,8 +105,12 @@ impl AppRoot {
         }
     }
 
-    async fn init_user_settings() -> AppRootMessage {
-        todo!()
+    async fn init_user_settings(game_data: Rc<GameData>) -> AppRootMessage {
+        let user_settings = UserSettings::create(game_data.deref());
+        let wrapped_us = WrappedUserSettings {
+            user_settings: RwLock::new(user_settings),
+        };
+        AppRootMessage::UserSettingsReady(Rc::new(wrapped_us))
     }
 }
 
@@ -139,7 +137,7 @@ impl Component for AppRoot {
             }
             AppRootMessage::GameDataReady(game_data) => {
                 self.game_data = Some(Rc::clone(&game_data));
-                scope.send_future(Self::init_user_settings());
+                scope.send_future(Self::init_user_settings(game_data));
             }
             AppRootMessage::IconMapReady(icon_map) => self.icon_map = Some(icon_map),
             AppRootMessage::UserSettingsReady(user_settings) => {
