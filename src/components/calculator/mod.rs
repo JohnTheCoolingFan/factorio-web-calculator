@@ -90,9 +90,7 @@ impl Component for Calculator {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let targets = &self.targets;
-        // Silenced the warning because sorting the resulting steps is planned
-        #[allow(unused_mut)]
-        let mut steps: Vec<CalcStep> = self
+        let steps: Vec<CalcStep> = self
             .calculation
             .as_ref()
             .and_then(|rescalc| rescalc.as_ref().ok())
@@ -106,8 +104,6 @@ impl Component for Calculator {
                     .collect()
             })
             .unwrap_or_default();
-        // Commented out because this doesn't work well with optimized sorting algos
-        //steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
         let steps = graph_sort(steps);
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
