@@ -19,6 +19,7 @@ wasm-logger = "0.2"
 gloo-storage = "0.2"
 gloo-net = "0.3"
 hashbrown = { version = "0.13", features = ["serde"] }
+petgraph = "0.6"
 
 [[bin]]
 name = "data-process"

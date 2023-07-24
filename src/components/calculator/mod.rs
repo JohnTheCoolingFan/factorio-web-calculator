@@ -108,6 +108,7 @@ impl Component for Calculator {
             .unwrap_or_default();
         // Commented out because this doesn't work well with optimized sorting algos
         //steps.sort_by(|cs1, cs2| cs1.factory.sort_by(&cs2.factory));
+        let steps = graph_sort(steps);
         let link = ctx.link();
         log::info!("number of steps: {}", steps.len());
         let status_message = if let Some(rescalc) = &self.calculation {
