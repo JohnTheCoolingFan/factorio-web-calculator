@@ -42,10 +42,10 @@ pub fn graph_sort(input: Vec<CalcStep>) -> Vec<CalcStep> {
     for (i, step) in input.iter().enumerate() {
         for (j, step2) in input.iter().enumerate().filter(|(_, st)| *st != step) {
             match step.factory.sort_by(&step2.factory) {
-                Ordering::Greater => {
+                Ordering::Less => {
                     dep_graph.add_edge(i, j, ());
                 }
-                Ordering::Less => {
+                Ordering::Greater => {
                     dep_graph.add_edge(j, i, ());
                 }
                 Ordering::Equal => {}
